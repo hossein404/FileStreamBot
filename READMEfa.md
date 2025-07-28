@@ -27,7 +27,7 @@
 
 1.  **کلون کردن پروژه:**
     ```bash
-    git clone [https://github.com/iamast3r/TG-File2Link.git](https://github.com/iamast3r/TG-File2Link.git)
+    git clone https://github.com/iamast3r/TG-File2Link.git
     cd TG-File2Link
     ```
 
