@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lang.broadcast_header }}{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">{{ lang.broadcast_header }}</h1>
+    <p class="text-gray-600 mt-1">{{ lang.broadcast_subheader }}</p>
+</div>
+
+<div class="bg-white p-6 rounded-lg shadow-md">
+    {% if success_message %}
+    <div class="p-4 mb-4 text-sm text-green-800 bg-green-100 rounded-lg" role="alert">
+        {{ success_message }}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        <div class="mb-4">
+            <label for="message" class="block text-gray-700 text-sm font-bold mb-2">{{ lang.message_text_label }}</label>
+            <textarea id="message" name="message" rows="8"
+                      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      placeholder="{{ lang.message_placeholder }}"></textarea>
+        </div>
+        <div class="flex items-center {{ 'justify-end' if current_lang == 'en' else 'justify-start' }}">
+            <button type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline">
+                {{ lang.send_message_button }}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

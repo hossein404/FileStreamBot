@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lang.users_list_header }}{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">{{ lang.users_list_header }}</h1>
+        <p class="text-gray-600 mt-1">{{ lang.users_list_subheader }}</p>
+    </div>
+    <a href="{{ request.app.router['admin_add_user'].url_for() }}?token={{ token }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center">
+        <svg class="w-5 h-5 {{ 'ml-2' if current_lang == 'fa' else 'mr-2' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        {{ lang.add_user_button }}
+    </a>
+</div>
+
+
+<div class="mb-6">
+    <form method="get" class="flex">
+        <input type="hidden" name="token" value="{{ token }}">
+        <input type="text" name="q" placeholder="{{ lang.search_placeholder }}" value="{{ search_query or '' }}"
+               class="w-full px-4 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-l-md hover:bg-indigo-700">{{ lang.search_button }}</button>
+    </form>
+</div>
+
+<div class="bg-white rounded-lg shadow-md overflow-x-auto">
+    <table class="min-w-full leading-normal">
+        <thead>
+            <tr class="bg-gray-200 text-gray-600 uppercase text-sm">
+                <th class="px-5 py-3 border-b-2 border-gray-300 text-right">{{ lang.table_header_user }}</th>
+                <th class="px-5 py-3 border-b-2 border-gray-300 text-center">{{ lang.table_header_usage_limit }}</th>
+                <th class="px-5 py-3 border-b-2 border-gray-300 text-right">{{ lang.table_header_join_date }}</th>
+                <th class="px-5 py-3 border-b-2 border-gray-300 text-center">{{ lang.table_header_status }}</th>
+                <th class="px-5 py-3 border-b-2 border-gray-300 text-center">{{ lang.table_header_actions }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                <td class="px-5 py-4 text-sm whitespace-nowrap">
+                    <p class="font-bold">{{ user.first_name or 'Nobody' }} {{ user.last_name or '' }}</p>
+                    <p class="text-gray-600">{% if user.username %}@{{ user.username }}{% else %}-{% endif %}</p>
+                    <code class="text-xs bg-gray-200 px-1 py-0.5 rounded">{{ user.id }}</code>
+                </td>
+                <td class="px-5 py-4 text-sm text-center">
+                    <p>{{ "%.2f"|format(user.total_size / 1024) }} / {% if user.traffic_limit_gb is not none %}{{ user.traffic_limit_gb }}{% else %}∞{% endif %}</p>
+                </td>
+                <td class="px-5 py-4 text-sm whitespace-nowrap">{{ user.join_date.strftime('%Y-%m-%d %H:%M') if user.join_date else '-' }}</td>
+                <td class="px-5 py-4 text-sm text-center">
+                    {% if user.is_banned %}
+                    <span class="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-full">{{ lang.status_banned }}</span>
+                    {% else %}
+                    <span class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full">{{ lang.status_active }}</span>
+                    {% endif %}
+                </td>
+                <td class="px-5 py-4 text-sm text-center whitespace-nowrap space-x-2 space-x-reverse">
+                    <a href="{{ request.app.router['admin_user_details'].url_for(user_id=user.id|string) }}?token={{ token }}" class="text-indigo-600 hover:text-indigo-900">{{ lang.action_details }}</a>
+                    <form action="{% if user.is_banned %}{{ request.app.router['admin_unban_user'].url_for() }}{% else %}{{ request.app.router['admin_ban_user'].url_for() }}{% endif %}?token={{ token }}" method="post" class="inline">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <button type="submit" class="{% if user.is_banned %}text-green-600 hover:text-green-900{% else %}text-red-600 hover:text-red-900{% endif %}">
+                            {% if user.is_banned %}{{ lang.action_unban }}{% else %}{{ lang.action_ban }}{% endif %}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center py-10 text-gray-500">{{ lang.no_users_found }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

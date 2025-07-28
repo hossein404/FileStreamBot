@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}" dir="{{ 'rtl' if current_lang == 'fa' else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ lang.admin_panel }}{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.3/Vazirmatn-font-face.min.css">
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; }
+        .active-nav {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+        }
+        /* Tailwind RTL support */
+        [dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]) { --tw-space-x-reverse: 1; }
+        [dir="rtl"] .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+        [dir="rtl"] .text-right { text-align: left; }
+        [dir="rtl"] .text-left { text-align: right; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="relative min-h-screen md:flex">
+        <div class="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 {{ 'right-0' if current_lang == 'fa' else 'left-0' }} transform {{ '-translate-x-full' if current_lang == 'ltr' else 'translate-x-full' }} md:relative md:translate-x-0 transition duration-200 ease-in-out flex flex-col" id="sidebar">
+            <div class="px-6 py-4 border-b border-gray-700">
+                <h2 class="text-2xl font-semibold">{{ lang.admin_panel }}</h2>
+            </div>
+            <nav class="flex-1 px-4 space-y-2">
+                <a href="{{ request.app.router['admin_dashboard'].url_for() }}?token={{ token }}" 
+                   class="flex items-center px-4 py-2 rounded-md hover:bg-gray-700 {% if current_path == '/admin/dashboard' %}active-nav{% endif %}">
+                    <svg class="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    {{ lang.dashboard }}
+                </a>
+                <a href="{{ request.app.router['admin_users'].url_for() }}?token={{ token }}" 
+                   class="flex items-center px-4 py-2 rounded-md hover:bg-gray-700 {% if '/admin/users' in current_path %}active-nav{% endif %}">
+                    <svg class="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-3-5.197M15 21a9 9 0 00-9-9"></path></svg>
+                    {{ lang.users }}
+                </a>
+                <a href="{{ request.app.router['admin_broadcast'].url_for() }}?token={{ token }}"
+                   class="flex items-center px-4 py-2 rounded-md hover:bg-gray-700 {% if current_path == '/admin/broadcast' %}active-nav{% endif %}">
+                    <svg class="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-2.236 9.168-5.5M11 5.882V5.5a2.5 2.5 0 10-5 0v.382m5 0a2.5 2.5 0 00-5 0m5 0a2.5 2.5 0 01-5 0m0 0l-2.147 6.15m0 0l-2.215-1.33M5.436 13.683l-2.215-1.33m2.215 1.33l-2.147-6.15m2.147 6.15l2.215 1.33"></path></svg>
+                    {{ lang.broadcast }}
+                </a>
+            </nav>
+            <div class="px-8 py-4 border-t border-gray-700 mt-auto">
+                 <form action="{{ request.app.router['admin_logout'].url_for() }}" method="post">
+                    <button type="submit" class="w-full flex items-center px-4 py-2 rounded-md text-red-400 hover:bg-red-600 hover:text-white">
+                        <svg class="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        {{ lang.logout }}
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="flex-1">
+            <header class="bg-white shadow-md p-4 flex justify-between items-center">
+                 <button class="md:hidden text-gray-500 focus:outline-none" id="menu-button">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <h2 class="text-xl font-semibold">{{ lang.admin_panel }}</h2>
+                <div class="flex items-center space-x-2">
+                    <a href="{{ request.app.router['set_panel_lang'].url_for(lang_code='fa') }}?return_to={{ request.path_qs }}" class="px-3 py-1 text-sm rounded-md transition-colors duration-200 {{ 'bg-indigo-600 text-white shadow' if current_lang == 'fa' else 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">FA</a>
+                    <a href="{{ request.app.router['set_panel_lang'].url_for(lang_code='en') }}?return_to={{ request.path_qs }}" class="px-3 py-1 text-sm rounded-md transition-colors duration-200 {{ 'bg-indigo-600 text-white shadow' if current_lang == 'en' else 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">EN</a>
+                </div>
+            </header>
+            <main class="p-6 md:p-10">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    <script>
+        const menuButton = document.getElementById('menu-button');
+        const sidebar = document.getElementById('sidebar');
+        const currentLang = document.documentElement.lang;
+
+        menuButton.addEventListener('click', () => {
+            if (currentLang === 'fa') { // RTL
+                sidebar.classList.toggle('translate-x-full');
+            } else { // LTR
+                sidebar.classList.toggle('-translate-x-full');
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

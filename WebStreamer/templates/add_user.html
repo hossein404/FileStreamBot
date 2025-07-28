@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lang.add_user_title }}{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <a href="{{ request.app.router['admin_users'].url_for() }}?token={{ token }}" class="text-indigo-600 hover:text-indigo-900 mb-4 inline-flex items-center">
+        <svg class="w-5 h-5 {{ 'ml-1' if current_lang == 'fa' else 'mr-1' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ 'M13 5l7 7-7 7M5 12h14' if current_lang == 'en' else 'M11 19l-7-7 7-7m8 14h-14' }}"></path></svg>
+        {{ lang.back_to_users_list }}
+    </a>
+    <h1 class="text-3xl font-bold text-gray-900 mt-2">{{ lang.add_user_header }}</h1>
+    <p class="text-gray-600 mt-1">{{ lang.add_user_subheader }}</p>
+</div>
+
+<div class="bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto">
+    <form action="{{ request.app.router['admin_add_user_post'].url_for() }}?token={{ token }}" method="post">
+        <div class="mb-4">
+            <label for="user_id" class="block text-gray-700 text-sm font-bold mb-2">{{ lang.user_numeric_id }}</label>
+            <input type="number" id="user_id" name="user_id" required
+                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                   placeholder="{{ lang.user_id_placeholder }}">
+            <p class="text-xs text-gray-500 mt-1">{{ lang.user_id_help_text }}</p>
+        </div>
+        <div class="mb-6">
+            <label for="limit_gb" class="block text-gray-700 text-sm font-bold mb-2">{{ lang.traffic_limit_gb }}</label>
+            <input type="number" step="any" id="limit_gb" name="limit_gb"
+                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                   placeholder="{{ lang.traffic_limit_placeholder }}">
+        </div>
+        <div class="flex items-center {{ 'justify-end' if current_lang == 'en' else 'justify-start' }}">
+            <button type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline">
+                {{ lang.add_user_button }}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
