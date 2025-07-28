@@ -6,10 +6,9 @@
   A powerful and efficient Telegram bot that generates direct, streamable links for your Telegram files.
 </p>
 
-<!-- Badges -->
 <p>
   <img src="https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python" alt="Python Version">
-  <img src="https://img.shields.io/badge/Framework-Pyrogram%20%7C%20Flask-orange?style=for-the-badge" alt="Framework">
+  <img src="https://img.shields.io/badge/Framework-Pyrogram%20%7C%20AIOHTTP-orange?style=for-the-badge" alt="Framework">
   <img src="https://img.shields.io/github/stars/iamast3r/TG-File2Link?style=for-the-badge&logo=github&label=Stars" alt="GitHub Stars">
   <img src="https://img.shields.io/github/forks/iamast3r/TG-File2Link?style=for-the-badge&logo=github&label=Forks" alt="GitHub Forks">
 </p>
@@ -25,7 +24,7 @@
 -   **Instant Link Generation**: Get a direct download/stream link for any file you forward to the bot.
 -   **Large File Support**: No file size limitations (subject to Telegram's limits).
 -   **High-Speed Streaming**: Links are generated on the fly without downloading files to your server first.
--   **Web Admin Panel**: Manage users and view statistics through a simple web interface.
+-   **Secure Web Admin Panel**: Manage users and view statistics through a simple and secure web interface with password hashing and CSRF protection.
 -   **Secure**: Restrict access to authorized users and specific channels.
 -   **Easy to Deploy**: Get your bot up and running with just a few simple commands.
 
@@ -84,11 +83,22 @@ Follow these steps to deploy the bot:
     USE_SESSION_FILE=
 
     # Credentials for the web admin panel.
-    ADMIN_USERNAME=
-    ADMIN_PASSWORD=
+    ADMIN_USERNAME=admin
+
+    # HASHED password for the admin panel.
+    # See the "Set Admin Password" step below to generate this hash.
+    ADMIN_PASSWORD_HASH=
     ```
 
-5.  **Run the bot:**
+5.  **Set Admin Password (Securely):**
+    Run the included script to generate a secure hash for your desired password.
+
+    ```bash
+    python3 generate_hash.py
+    ```
+    Enter your password when prompted. The script will output a hashed string. Copy this entire string and paste it as the value for `ADMIN_PASSWORD_HASH` in your `.env` file.
+
+6.  **Run the bot:**
     ```bash
     python3 -m WebStreamer
     ```
@@ -106,7 +116,7 @@ Your bot is now live and ready to serve!
 ## 🌐 Web Panel Usage
 
 -   **Access**: You can access the admin panel by navigating to `http://<Your_FQDN>:<PORT>/admin/login` in your web browser.
--   **Login**: Use the `ADMIN_USERNAME` and `ADMIN_PASSWORD` you set in your `.env` file to log in.
+-   **Login**: Use the `ADMIN_USERNAME` and the password you set in **Step 5** to log in.
 -   **Features**: From the dashboard, you can view bot statistics, manage users (add/remove), and perform other administrative tasks.
 
 ## ❤️ Support & Donations
@@ -125,7 +135,7 @@ Contributions are welcome! If you have suggestions or want to improve the code, 
 
 ## 📝 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [GNU AGPLv3 License](LICENSE).
 
 ## 🌟 Credits
 
