@@ -1,15 +1,12 @@
 # WebStreamer/vars.py
-
 import os
 import logging
 import sys
 from os import getenv
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='[%(asctime)s][%(name)s][%(levelname)s] ==> %(message)s',
@@ -17,9 +14,6 @@ logging.basicConfig(
 )
 
 class Var(object):
-    """A class to hold all environment variables."""
-    
-    # --- Mandatory Environment Variables Check ---
     mandatory_vars = ['API_ID', 'API_HASH', 'BOT_TOKEN', 'OWNER_ID', 'BIN_CHANNEL']
     missing_vars = [v for v in mandatory_vars if not getenv(v)]
     if missing_vars:
@@ -32,8 +26,6 @@ class Var(object):
     OWNER_ID = int(getenv('OWNER_ID'))
     BIN_CHANNEL = int(getenv('BIN_CHANNEL'))
     
-    # --- Other Configurations ---
-    DATABASE_URL = getenv('DATABASE_URL', None) # Not used with SQLite
     PORT = int(getenv('PORT', 8080))
     BIND_ADDRESS = str(getenv('WEB_SERVER_BIND_ADDRESS', '0.0.0.0'))
     
@@ -60,12 +52,15 @@ class Var(object):
     PING_INTERVAL = int(getenv('PING_INTERVAL', '1200'))
     USE_SESSION_FILE = getenv('USE_SESSION_FILE', 'false').lower() == 'true'
     
-    # ALLOWED_USERS is now deprecated in favor of database-driven user management
-    # It can still be used as an initial list of admins if needed, but not for general access
-    ALLOWED_USERS = [int(user) for user in getenv('ALLOWED_USERS', '').split(',') if user]
-    
     HASH_LENGTH = int(getenv('HASH_LENGTH', '6'))
     ADMIN_USERNAME = getenv('ADMIN_USERNAME', 'admin')
-    ADMIN_PASSWORD = getenv('ADMIN_PASSWORD', 'password')
+    
+    # Reads the HASHED password from the environment variable.
+    ADMIN_PASSWORD_HASH = getenv('ADMIN_PASSWORD_HASH')
+    if not ADMIN_PASSWORD_HASH:
+        logging.critical("FATAL: ADMIN_PASSWORD_HASH environment variable is not set!")
+        logging.critical("Please run 'python3 generate_hash.py' to create a hash and add it to your .env file.")
+        sys.exit(1)
+
     KEEP_ALIVE = getenv('KEEP_ALIVE', 'false').lower() == 'true'
     MULTI_CLIENT = False

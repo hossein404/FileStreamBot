@@ -16,6 +16,7 @@
     {% endif %}
 
     <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <div class="mb-4">
             <label for="message" class="block text-gray-700 text-sm font-bold mb-2">{{ lang.message_text_label }}</label>
             <textarea id="message" name="message" rows="8"

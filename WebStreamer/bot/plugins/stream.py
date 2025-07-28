@@ -1,6 +1,7 @@
 # WebStreamer/bot/plugins/stream.py
 import logging
 import os
+import re
 from pyrogram import filters, errors
 from WebStreamer.vars import Var
 from urllib.parse import quote_plus
@@ -17,6 +18,21 @@ from pyrogram.enums.parse_mode import ParseMode
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 
 limiter = RateLimiter()
+
+def secure_filename(filename: str) -> str:
+    """
+    Cleans and secures a filename by removing potentially dangerous characters.
+    It keeps alphanumeric characters, dots, dashes, and underscores.
+    """
+    # Remove directory traversal attempts
+    filename = filename.replace('..', '')
+    # A strict whitelist of allowed characters
+    filename = re.sub(r'[^a-zA-Z0-9_.-]', '', filename).strip()
+    # If the filename becomes empty after sanitization, provide a default name
+    if not filename:
+        return "download"
+    return filename
+
 
 @StreamBot.on_message(
     filters.private
@@ -61,7 +77,8 @@ async def media_receive_handler(bot, m: Message):
     
     if not m.forward_date and m.caption:
         _ , file_extension = os.path.splitext(original_filename)
-        custom_base_name = m.caption.replace("\r", " ").replace("\n", " ").strip()
+        # Sanitize the custom name from caption securely
+        custom_base_name = secure_filename(m.caption.replace("\r", " ").replace("\n", " ").strip())
         final_filename = custom_base_name + file_extension
     else:
         final_filename = original_filename

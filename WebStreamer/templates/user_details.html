@@ -12,7 +12,6 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <!-- User Info & Actions -->
     <div class="lg:col-span-1 space-y-6">
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-semibold mb-4 border-b pb-2">اطلاعات کاربر</h2>
@@ -37,6 +36,7 @@
                 <p class="text-sm text-gray-600">محدودیت: <span class="font-bold">{% if user.traffic_limit_gb is not none %}{{ user.traffic_limit_gb }} GB{% else %}نامحدود{% endif %}</span></p>
             </div>
             <form action="{{ request.app.router['admin_update_limit'].url_for() }}?token={{ token }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <input type="hidden" name="user_id" value="{{ user.id }}">
                 <label for="limit_gb" class="block text-sm font-medium text-gray-700 mb-1">ویرایش محدودیت (GB):</label>
                 <input type="number" step="any" id="limit_gb" name="limit_gb" value="{{ user.traffic_limit_gb or '' }}"
@@ -47,7 +47,6 @@
         </div>
     </div>
 
-    <!-- User Links Table -->
     <div class="lg:col-span-2 bg-white rounded-lg shadow-md overflow-hidden">
         <div class="p-4 border-b">
             <h2 class="text-xl font-semibold">لینک‌های ساخته شده توسط کاربر</h2>
@@ -69,6 +68,7 @@
                         <td class="px-5 py-4 text-sm text-center space-x-4 space-x-reverse">
                             <a href="{{ link.stream_link }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">باز کردن</a>
                             <form action="{{ request.app.router['admin_delete_link'].url_for() }}?token={{ token }}" method="post" class="inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                 <input type="hidden" name="link_id" value="{{ link.id }}">
                                 <button type="submit" class="text-red-600 hover:text-red-900">حذف</button>
                             </form>

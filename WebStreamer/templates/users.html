@@ -57,6 +57,7 @@
                 <td class="px-5 py-4 text-sm text-center whitespace-nowrap space-x-2 space-x-reverse">
                     <a href="{{ request.app.router['admin_user_details'].url_for(user_id=user.id|string) }}?token={{ token }}" class="text-indigo-600 hover:text-indigo-900">{{ lang.action_details }}</a>
                     <form action="{% if user.is_banned %}{{ request.app.router['admin_unban_user'].url_for() }}{% else %}{{ request.app.router['admin_ban_user'].url_for() }}{% endif %}?token={{ token }}" method="post" class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <input type="hidden" name="user_id" value="{{ user.id }}">
                         <button type="submit" class="{% if user.is_banned %}text-green-600 hover:text-green-900{% else %}text-red-600 hover:text-red-900{% endif %}">
                             {% if user.is_banned %}{{ lang.action_unban }}{% else %}{{ lang.action_ban }}{% endif %}
