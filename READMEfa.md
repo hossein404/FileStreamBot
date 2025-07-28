@@ -76,7 +76,7 @@
     USE_SESSION_FILE=
 
     # Credentials for the web admin panel.
-    ADMIN_USERNAME=admin
+    ADMIN_USERNAME=
 
     # HASHED password for the admin panel.
     # See the "Set Admin Password" step below to generate this hash.
