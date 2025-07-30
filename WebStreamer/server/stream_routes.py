@@ -144,7 +144,14 @@ async def media_streamer(request: web.Request, message_id: int, secure_hash: str
         file_id, index, offset, first_part_cut, last_part_cut, part_count, chunk_size
     )
 
-    disposition = "inline" if "video/" in mime_type or "audio/" in mime_type else "attachment"
+    # --- بخش اصلاح شده ---
+    # به طور پیش‌فرض، فایل برای دانلود ارسال می‌شود
+    disposition = "attachment"
+    
+    # اگر نوع فایل ویدیو یا صوت بود، آن را برای پخش آنلاین (استریم) تنظیم می‌کنیم
+    if isinstance(mime_type, str) and ("video/" in mime_type or "audio/" in mime_type):
+        disposition = "inline"
+    # --- پایان بخش اصلاح شده ---
 
     return web.Response(
         status=206 if range_header else 200,
