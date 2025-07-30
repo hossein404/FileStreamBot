@@ -2,10 +2,8 @@
 import sqlite3
 import asyncio
 
-# --- دیکشنری ترجمه‌ها (نسخه کامل و نهایی) ---
 translations = {
     'fa': {
-        # --- ربات تلگرام ---
         "START_TEXT": "👋 **سلام {mention} عزیز!**\n\nمن ربات استریم فایل هستم. هر فایلی رو برام بفرستی، در یک چشم به هم زدن لینک مستقیمش رو بهت تحویل میدم. 🚀\n\n**قابلیت‌های ربات:**\n» با دستور /mylinks می‌تونی لینک‌هات رو مدیریت و حذف کنی.\n» با دستور /stats می‌تونی وضعیت حسابت رو ببینی.",
         "START_FOOTER": "\nبرای شروع، یک فایل رو **فوروارد** یا **آپلود** کن.",
         "RATE_LIMIT_INFO": "» برای جلوگیری از اسپم، شما می‌توانید `{max_requests}` فایل در هر `{time_window}` ثانیه ارسال کنید.\n",
@@ -42,7 +40,6 @@ translations = {
         "NO_CHANGE_IN_STATS": "تغییری در آمار شما وجود ندارد.",
         "STATS_ERROR": "خطایی رخ داد!",
 
-        # --- پنل مدیریت (کامل شده) ---
         "admin_panel": "پنل مدیریت",
         "dashboard": "داشبورد",
         "users": "کاربران",
@@ -154,7 +151,7 @@ translations = {
         "NO_CHANGE_IN_STATS": "There is no change in your stats.",
         "STATS_ERROR": "An error occurred!",
 
-        # --- Admin Panel (Completed) ---
+        # --- Admin Panel ---
         "admin_panel": "Admin Panel",
         "dashboard": "Dashboard",
         "users": "Users",
