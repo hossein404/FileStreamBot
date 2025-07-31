@@ -1,6 +1,6 @@
 <div align="center">
 
-#  TG-File2Link Streamer 🚀
+#  Telegram File Stream Bot 🚀
 
 <p>
   A powerful and efficient Telegram bot that generates direct, streamable links for your Telegram files.
