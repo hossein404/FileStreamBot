@@ -51,14 +51,18 @@ async def stream_handler(request: web.Request):
 
         return await media_streamer(request, message_id, secure_hash, custom_filename)
 
+    except (ConnectionError, ConnectionResetError, asyncio.CancelledError):
+        # This will now catch the error cleanly and prevent the CRITICAL log.
+        logger.info("Client connection closed unexpectedly. This is normal for media streaming.")
+        return web.Response(status=200) # Sending a dummy response to close the connection gracefully
     except InvalidHash as e:
         raise web.HTTPForbidden(text=str(e))
     except FIleNotFound as e:
         raise web.HTTPNotFound(text=str(e))
-    except (ValueError, ConnectionResetError, BadStatusLine):
+    except (ValueError, BadStatusLine):
         raise web.HTTPBadRequest(text="Invalid request format.")
     except Exception as e:
-        logger.critical(str(e), exc_info=True)
+        logger.critical(f"Unhandled error in stream_handler: {e}", exc_info=True)
         raise web.HTTPInternalServerError(text=str(e))
 
 
@@ -84,7 +88,6 @@ async def media_streamer(request: web.Request, message_id: int, secure_hash: str
     from_bytes, until_bytes = 0, file_size - 1
 
     if range_header:
-        # Correctly parse the range header
         range_str = range_header.strip().replace("bytes=", "")
         parts = range_str.split("-")
         from_bytes = int(parts[0]) if parts[0] else 0
@@ -114,11 +117,12 @@ async def media_streamer(request: web.Request, message_id: int, secure_hash: str
     )
     await resp.prepare(request)
 
+    # The main change is now in the outer stream_handler function.
+    # We still keep this block to stop the generator, but the main error is handled outside.
     async for chunk in body:
         try:
             await resp.write(chunk)
         except (ConnectionResetError, asyncio.CancelledError):
-            # Client has closed the connection
-            break
+            break # Exit the loop, the outer handler will catch the main exception
     
     return resp
