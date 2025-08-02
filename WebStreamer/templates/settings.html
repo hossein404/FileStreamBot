@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lang.robot_settings }}{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">{{ lang.settings_header }}</h1>
+    <p class="text-gray-600 mt-1">{{ lang.settings_subheader }}</p>
+</div>
+
+{% if saved %}
+<div class="p-4 mb-4 text-sm text-green-800 bg-green-100 rounded-lg" role="alert">
+    {{ lang.settings_saved_success }}
+</div>
+{% endif %}
+
+<div class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+    <form action="{{ request.app.router['admin_settings_post'].url_for() }}?token={{ token }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        
+        <div class="space-y-6">
+            <div>
+                <label for="rate_limit" class="block text-gray-700 text-sm font-bold mb-2">{{ lang.rate_limit_toggle }}</label>
+                <select name="rate_limit" id="rate_limit" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="true" {% if config.rate_limit %}selected{% endif %}>{{ lang.active }}</option>
+                    <option value="false" {% if not config.rate_limit %}selected{% endif %}>{{ lang.inactive }}</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">{{ lang.rate_limit_desc }}</p>
+            </div>
+
+            <div>
+                <label for="max_requests" class="block text-gray-700 text-sm font-bold mb-2">{{ lang.max_requests_label }}</label>
+                <input type="number" id="max_requests" name="max_requests" value="{{ config.max_requests }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <p class="text-xs text-gray-500 mt-1">{{ lang.max_requests_desc }}</p>
+            </div>
+
+            <div>
+                <label for="time_window" class="block text-gray-700 text-sm font-bold mb-2">{{ lang.time_window_label }}</label>
+                <input type="number" id="time_window" name="time_window" value="{{ config.time_window }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <p class="text-xs text-gray-500 mt-1">{{ lang.time_window_desc }}</p>
+            </div>
+        </div>
+
+        <div class="flex items-center {{ 'justify-end' if current_lang == 'en' else 'justify-start' }} mt-8">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline">
+                {{ lang.save_changes_button }}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

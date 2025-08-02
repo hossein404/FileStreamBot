@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lang.server_logs }}{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">{{ lang.server_logs_header }}</h1>
+        <p class="text-gray-600 mt-1">{{ lang.server_logs_subheader }}</p>
+    </div>
+    <a href="{{ request.app.router['admin_server_logs'].url_for() }}?token={{ token }}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+        <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+        </svg>
+        {{ lang.reload_btn }}
+    </a>
+</div>
+
+<div class="bg-gray-900 text-white font-mono text-xs rounded-lg shadow-lg overflow-hidden">
+    <div class="p-4 overflow-x-auto h-screen max-h-[70vh]">
+        <pre><code>{{ logs }}</code></pre>
+    </div>
+</div>
+{% endblock %}

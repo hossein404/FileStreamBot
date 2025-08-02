@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lang.login_logs }}{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">{{ lang.login_logs_header }}</h1>
+    <p class="text-gray-600 mt-1">{{ lang.login_logs_subheader }}</p>
+</div>
+
+<div class="bg-white rounded-lg shadow-md overflow-x-auto">
+    <table class="min-w-full leading-normal">
+        <thead>
+            <tr class="bg-gray-200 text-gray-600 uppercase text-sm">
+                <th class="px-5 py-3 border-b-2 border-gray-300 text-right">{{ lang.table_header_time }}</th>
+                <th class="px-5 py-3 border-b-2 border-gray-300 text-right">{{ lang.table_header_ip }}</th>
+                <th class="px-5 py-3 border-b-2 border-gray-300 text-right">{{ lang.table_header_username_attempt }}</th>
+                <th class="px-5 py-3 border-b-2 border-gray-300 text-center">{{ lang.status }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                <td class="px-5 py-4 text-sm whitespace-nowrap">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else '-' }}</td>
+                <td class="px-5 py-4 text-sm"><code class="bg-gray-200 px-2 py-1 rounded">{{ log.ip_address }}</code></td>
+                <td class="px-5 py-4 text-sm">{{ log.username_attempt }}</td>
+                <td class="px-5 py-4 text-sm text-center">
+                    {% if log.successful %}
+                    <span class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full">{{ lang.login_status_success }}</span>
+                    {% else %}
+                    <span class="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-full">{{ lang.login_status_failed }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="text-center py-10 text-gray-500">{{ lang.no_login_logs }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

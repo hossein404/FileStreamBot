@@ -29,6 +29,23 @@
                 </p>
             </div>
         </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md">
+             <h2 class="text-xl font-semibold mb-4 border-b pb-2">{{ lang.table_header_actions }}</h2>
+             <div class="space-y-3">
+                <a href="{{ request.app.router['admin_send_message'].url_for(user_id=user.id|string) }}?token={{ token }}" class="w-full text-center flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    {{ lang.send_private_message_btn }}
+                </a>
+                <form action="{% if user.is_banned %}{{ request.app.router['admin_unban_user'].url_for() }}{% else %}{{ request.app.router['admin_ban_user'].url_for() }}{% endif %}?token={{ token }}" method="post" class="inline w-full">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                    <button type="submit" class="w-full text-center flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white {% if user.is_banned %}bg-green-600 hover:bg-green-700{% else %}bg-red-600 hover:bg-red-700{% endif %}">
+                        {% if user.is_banned %}{{ lang.action_unban }}{% else %}{{ lang.action_ban }}{% endif %}
+                    </button>
+                </form>
+             </div>
+        </div>
+
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-semibold mb-4 border-b pb-2">{{ lang.traffic_management }}</h2>
             <div class="mb-4">
@@ -48,8 +65,12 @@
     </div>
 
     <div class="lg:col-span-2 bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="p-4 border-b">
+        <div class="p-4 border-b flex justify-between items-center">
             <h2 class="text-xl font-semibold">{{ lang.user_links_header }}</h2>
+            <form action="{{ request.app.router['admin_deactivate_user_links'].url_for(user_id=user.id|string) }}?token={{ token }}" method="post" onsubmit="return confirm('{{ lang.confirm_delete_all_links }}')">
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                 <button type="submit" class="py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700">{{ lang.delete_all_links_btn }}</button>
+            </form>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full leading-normal">

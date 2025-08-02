@@ -1,3 +1,4 @@
+# WebStreamer/utils/file_properties.py
 import hashlib
 from pyrogram import Client
 from pyrogram.types import Message
@@ -32,58 +33,35 @@ async def get_file_ids(client: Client, chat_id: int, message_id: int) -> Optiona
     return file_id
 
 def get_media_from_message(message: "Message") -> Any:
-    media_types = (
-        "audio",
-        "document",
-        "photo",
-        "sticker",
-        "animation",
-        "video",
-        "voice",
-        "video_note",
-    )
+    media_types = ("audio", "document", "photo", "sticker", "animation", "video", "voice", "video_note")
     for attr in media_types:
-        media = getattr(message, attr, None)
-        if media:
+        if media := getattr(message, attr, None):
             return media
 
-
 def get_hash(media_msg: Union[str, Message], length: int) -> str:
-    if isinstance(media_msg, Message):
-        media = get_media_from_message(media_msg)
-        unique_id = getattr(media, "file_unique_id", "")
-    else:
-        unique_id = media_msg
+    unique_id = media_msg if isinstance(media_msg, str) else getattr(get_media_from_message(media_msg), "file_unique_id", "")
     long_hash = hashlib.sha256(unique_id.encode("UTF-8")).hexdigest()
     return long_hash[:length]
 
 
 def get_name(media_msg: Union[Message, FileId]) -> str:
-
+    file_name = "" # FIX: Initialize file_name to an empty string.
     if isinstance(media_msg, Message):
         media = get_media_from_message(media_msg)
         file_name = getattr(media, "file_name", "")
-
     elif isinstance(media_msg, FileId):
         file_name = getattr(media_msg, "file_name", "")
 
     if not file_name:
         if isinstance(media_msg, Message) and media_msg.media:
             media_type = media_msg.media.value
-        elif media_msg.file_type:
+        elif isinstance(media_msg, FileId) and media_msg.file_type:
             media_type = media_msg.file_type.name.lower()
         else:
             media_type = "file"
 
-        formats = {
-            "photo": "jpg", "audio": "mp3", "voice": "ogg",
-            "video": "mp4", "animation": "mp4", "video_note": "mp4",
-            "sticker": "webp"
-        }
-
-        ext = formats.get(media_type)
-        ext = "." + ext if ext else ""
-
+        formats = {"photo": "jpg", "audio": "mp3", "voice": "ogg", "video": "mp4", "animation": "mp4", "video_note": "mp4", "sticker": "webp"}
+        ext = "." + formats.get(media_type, "")
         date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         file_name = f"{media_type}-{date}{ext}"
 

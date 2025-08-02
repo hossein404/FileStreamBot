@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lang.search_links }}{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">{{ lang.search_links_header }}</h1>
+    <p class="text-gray-600 mt-1">{{ lang.search_links_subheader }}</p>
+</div>
+
+<div class="bg-white p-6 rounded-lg shadow-md mb-6">
+    <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <input type="hidden" name="token" value="{{ token }}">
+        <div>
+            <label for="file_q" class="block text-sm font-medium text-gray-700">{{ lang.search_by_filename }}</label>
+            <input type="text" name="file_q" id="file_q" value="{{ search_file_query or '' }}" placeholder="{{ lang.search_by_filename_placeholder }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+        </div>
+        <div>
+            <label for="user_q" class="block text-sm font-medium text-gray-700">{{ lang.search_by_user }}</label>
+            <input type="text" name="user_q" id="user_q" value="{{ search_user_query or '' }}" placeholder="{{ lang.search_by_user_placeholder }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+        </div>
+        <div>
+            <label for="status" class="block text-sm font-medium text-gray-700">{{ lang.status }}</label>
+            <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                <option value="active" {% if search_status == 'active' %}selected{% endif %}>{{ lang.active_status }}</option>
+                <option value="inactive" {% if search_status == 'inactive' %}selected{% endif %}>{{ lang.inactive_status }}</option>
+            </select>
+        </div>
+        <div class="md:col-span-3 flex {{ 'justify-end' if current_lang == 'en' else 'justify-start' }}">
+            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                {{ lang.search_button }}
+            </button>
+        </div>
+    </form>
+</div>
+
+<form action="{{ request.app.router['admin_deactivate_selected_links'].url_for() }}?token={{ token }}" method="post" id="links-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="bg-white rounded-lg shadow-md overflow-x-auto">
+        <div class="p-4 flex justify-between items-center">
+            <h2 class="text-lg font-semibold">{{ lang.search_results_header.format(count=links|length) }}</h2>
+            <button type="submit" class="py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                {{ lang.delete_selected_btn }}
+            </button>
+        </div>
+        <table class="min-w-full leading-normal">
+            <thead>
+                <tr class="bg-gray-200 text-gray-600 uppercase text-sm">
+                    <th class="px-5 py-3 border-b-2 border-gray-300 text-right"><input type="checkbox" id="select-all"></th>
+                    <th class="px-5 py-3 border-b-2 border-gray-300 text-right">{{ lang.table_header_file }}</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-300 text-right">{{ lang.table_header_user }}</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-300 text-center">{{ lang.table_header_views }}</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-300 text-right">{{ lang.table_header_creation_date }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for link in links %}
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="px-5 py-4 text-sm"><input type="checkbox" name="link_ids" value="{{ link.id }}" class="link-checkbox"></td>
+                    <td class="px-5 py-4 text-sm">
+                        <p class="font-semibold">{{ link.file_name }}</p>
+                        <p class="text-xs text-gray-600">{{ "%.2f"|format(link.file_size_mb) }} MB</p>
+                    </td>
+                    <td class="px-5 py-4 text-sm">
+                        <a href="{{ request.app.router['admin_user_details'].url_for(user_id=link.user_id|string) }}?token={{ token }}" class="text-indigo-600 hover:underline">
+                            {{ link.first_name or 'کاربر' }} (@{{ link.username or link.user_id }})
+                        </a>
+                    </td>
+                    <td class="px-5 py-4 text-sm text-center">{{ link.views }}</td>
+                    <td class="px-5 py-4 text-sm whitespace-nowrap">{{ link.creation_date.strftime('%Y-%m-%d %H:%M') if link.creation_date else '-' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-10 text-gray-500">{{ lang.no_links_found_search }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('select-all').addEventListener('click', function(event) {
+    var checkboxes = document.querySelectorAll('.link-checkbox');
+    for (var checkbox of checkboxes) { checkbox.checked = event.target.checked; }
+});
+document.getElementById('links-form').addEventListener('submit', function(event) {
+    if (!confirm('{{ lang.confirm_delete_selected }}')) { event.preventDefault(); }
+});
+</script>
+{% endblock %}

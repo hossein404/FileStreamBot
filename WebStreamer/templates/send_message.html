@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lang.send_message_to_user_header }}{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <a href="{{ request.app.router['admin_user_details'].url_for(user_id=user_id|string) }}?token={{ token }}" class="text-indigo-600 hover:text-indigo-900 mb-4 inline-flex items-center">
+        <svg class="w-5 h-5 {{ 'ml-1' if current_lang == 'fa' else 'mr-1' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ 'M13 5l7 7-7 7M5 12h14' if current_lang == 'en' else 'M11 19l-7-7 7-7m8 14h-14' }}"></path></svg>
+        {{ lang.back_to_user_details }}
+    </a>
+    <h1 class="text-3xl font-bold text-gray-900 mt-2">{{ lang.send_message_to_user_header }} <code class="bg-gray-200 px-2 py-1 rounded">{{ user_id }}</code></h1>
+    <p class="text-gray-600 mt-1">{{ lang.send_message_to_user_subheader }}</p>
+</div>
+
+<div class="bg-white p-6 rounded-lg shadow-md max-w-lg mx-auto">
+    {% if success_message %}
+    <div class="p-4 mb-4 text-sm text-green-800 bg-green-100 rounded-lg" role="alert">
+        {{ success_message }}
+    </div>
+    {% endif %}
+    {% if error_message %}
+    <div class="p-4 mb-4 text-sm text-red-800 bg-red-100 rounded-lg" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="mb-4">
+            <label for="message" class="block text-gray-700 text-sm font-bold mb-2">{{ lang.message_text_label }}</label>
+            <textarea id="message" name="message" rows="8"
+                      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      placeholder="{{ lang.message_placeholder }}"></textarea>
+        </div>
+        <div class="flex items-center {{ 'justify-end' if current_lang == 'en' else 'justify-start' }}">
+            <button type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline">
+                {{ lang.send_message_button }}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -18,8 +18,10 @@ def web_server(bot):
     app['bot'] = bot
     app['admin_auth_token'] = None
     
+    # Setup Jinja2 templates with async mode enabled
     aiohttp_jinja2.setup(
         app, 
+        enable_async=True,  # This line fixes the error
         loader=jinja2.FileSystemLoader('WebStreamer/templates')
     )
     

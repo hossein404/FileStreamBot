@@ -7,17 +7,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(asctime)s][%(name)s][%(levelname)s] ==> %(message)s',
-    datefmt='%d/%m/%Y %H:%M:%S'
-)
+# Logging is now handled exclusively in __main__.py to prevent duplicate logs.
 
 class Var(object):
     mandatory_vars = ['API_ID', 'API_HASH', 'BOT_TOKEN', 'OWNER_ID', 'BIN_CHANNEL']
     missing_vars = [v for v in mandatory_vars if not getenv(v)]
     if missing_vars:
-        logging.critical(f"FATAL: Missing mandatory environment variables: {missing_vars}")
+        # Use print here because logging might not be configured yet
+        print(f"FATAL: Missing mandatory environment variables: {missing_vars}")
         sys.exit(1)
 
     API_ID = int(getenv('API_ID'))
@@ -34,7 +31,7 @@ class Var(object):
     if ON_HEROKU and not FQDN:
         APP_NAME = getenv('APP_NAME')
         if not APP_NAME:
-            logging.critical("FATAL: APP_NAME env var is required on Heroku.")
+            print("FATAL: APP_NAME env var is required on Heroku.")
             sys.exit(1)
         FQDN = f"{APP_NAME}.herokuapp.com"
     elif not FQDN:
@@ -44,9 +41,11 @@ class Var(object):
     URL = f"https://{FQDN}/" if HAS_SSL else f"http://{FQDN}:{PORT}/"
     
     DEBUG = getenv('DEBUG', 'false').lower() == 'true'
+    # These variables were missing in the previous version I provided
     RATE_LIMIT = getenv('RATE_LIMIT', 'false').lower() == 'true'
     MAX_REQUESTS = int(getenv('MAX_REQUESTS', '5'))
     TIME_WINDOW = int(getenv('TIME_WINDOW', '60'))
+    
     SLEEP_THRESHOLD = int(getenv('SLEEP_THRESHOLD', '60'))
     WORKERS = int(getenv('WORKERS', '4'))
     PING_INTERVAL = int(getenv('PING_INTERVAL', '1200'))
@@ -55,11 +54,10 @@ class Var(object):
     HASH_LENGTH = int(getenv('HASH_LENGTH', '6'))
     ADMIN_USERNAME = getenv('ADMIN_USERNAME', 'admin')
     
-    # Reads the HASHED password from the environment variable.
     ADMIN_PASSWORD_HASH = getenv('ADMIN_PASSWORD_HASH')
     if not ADMIN_PASSWORD_HASH:
-        logging.critical("FATAL: ADMIN_PASSWORD_HASH environment variable is not set!")
-        logging.critical("Please run 'python3 generate_hash.py' to create a hash and add it to your .env file.")
+        print("FATAL: ADMIN_PASSWORD_HASH environment variable is not set!")
+        print("Please run 'python3 generate_hash.py' to create a hash and add it to your .env file.")
         sys.exit(1)
 
     KEEP_ALIVE = getenv('KEEP_ALIVE', 'false').lower() == 'true'
