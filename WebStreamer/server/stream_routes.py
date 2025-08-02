@@ -63,7 +63,6 @@ async def stream_handler(request: web.Request):
 
 
 async def media_streamer(request: web.Request, message_id: int, secure_hash: str, custom_filename: str = None):
-    range_header = request.headers.get("Range", 0)
     index = min(work_loads, key=work_loads.get)
     faster_client = multi_clients[index]
     
@@ -81,11 +80,16 @@ async def media_streamer(request: web.Request, message_id: int, secure_hash: str
     
     mime_type = file_id.mime_type or mimetypes.guess_type(file_name)[0] or "application/octet-stream"
     
-    from_bytes, until_bytes = (0, file_size -1)
-    if range_header:
-        from_bytes, until_bytes = [int(i) for i in range_header.replace("bytes=", "").split("-") if i]
-        until_bytes = until_bytes or file_size - 1
+    range_header = request.headers.get("Range")
+    from_bytes, until_bytes = 0, file_size - 1
 
+    if range_header:
+        # Correctly parse the range header
+        range_str = range_header.strip().replace("bytes=", "")
+        parts = range_str.split("-")
+        from_bytes = int(parts[0]) if parts[0] else 0
+        until_bytes = int(parts[1]) if parts[1] else file_size - 1
+    
     if (until_bytes > file_size) or (from_bytes < 0) or (until_bytes < from_bytes):
         return web.Response(status=416, body="416: Range not satisfiable", headers={"Content-Range": f"bytes */{file_size}"})
 
@@ -98,9 +102,8 @@ async def media_streamer(request: web.Request, message_id: int, secure_hash: str
 
     body = tg_connect.yield_file(file_id, index, offset, first_part_cut, last_part_cut, part_count, chunk_size)
 
-    return web.Response(
+    resp = web.StreamResponse(
         status=206 if range_header else 200,
-        body=body,
         headers={
             "Content-Type": mime_type,
             "Content-Range": f"bytes {from_bytes}-{until_bytes}/{file_size}",
@@ -109,3 +112,13 @@ async def media_streamer(request: web.Request, message_id: int, secure_hash: str
             "Accept-Ranges": "bytes",
         }
     )
+    await resp.prepare(request)
+
+    async for chunk in body:
+        try:
+            await resp.write(chunk)
+        except (ConnectionResetError, asyncio.CancelledError):
+            # Client has closed the connection
+            break
+    
+    return resp

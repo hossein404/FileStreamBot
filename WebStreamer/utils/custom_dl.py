@@ -1,3 +1,4 @@
+# WebStreamer/utils/custom_dl.py
 import math
 import asyncio
 import logging
@@ -7,7 +8,7 @@ from WebStreamer.bot import work_loads
 from pyrogram import Client, utils, raw
 from .file_properties import get_file_ids
 from pyrogram.session import Session, Auth
-from pyrogram.errors import AuthBytesInvalid
+from pyrogram.errors import AuthBytesInvalid, FloodWait
 from WebStreamer.errors import FIleNotFound
 from pyrogram.file_id import FileId, FileType, ThumbnailSource
 
@@ -15,41 +16,18 @@ logger = logging.getLogger("streamer")
 
 class ByteStreamer:
     def __init__(self, client: Client):
-        """A custom class that holds the cache of a specific client and class functions.
-        attributes:
-            client: the client that the cache is for.
-            cached_file_ids: a dict of cached file IDs.
-            cached_file_properties: a dict of cached file properties.
-        
-        functions:
-            generate_file_properties: returns the properties for a media of a specific message contained in Tuple.
-            generate_media_session: returns the media session for the DC that contains the media file.
-            yield_file: yield a file from telegram servers for streaming.
-            
-        This is a modified version of the <https://github.com/eyaadh/megadlbot_oss/blob/master/mega/telegram/utils/custom_download.py>
-        Thanks to Eyaadh <https://github.com/eyaadh>
-        """
         self.clean_timer = 30 * 60
         self.client: Client = client
         self.cached_file_ids: Dict[int, FileId] = {}
         asyncio.create_task(self.clean_cache())
 
     async def get_file_properties(self, message_id: int) -> FileId:
-        """
-        Returns the properties of a media of a specific message in a FIleId class.
-        if the properties are cached, then it'll return the cached results.
-        or it'll generate the properties from the Message ID and cache them.
-        """
         if message_id not in self.cached_file_ids:
             await self.generate_file_properties(message_id)
             logger.debug(f"Cached file properties for message with ID {message_id}")
         return self.cached_file_ids[message_id]
     
     async def generate_file_properties(self, message_id: int) -> FileId:
-        """
-        Generates the properties of a media file on a specific message.
-        returns ths properties in a FIleId class.
-        """
         file_id = await get_file_ids(self.client, Var.BIN_CHANNEL, message_id)
         logger.debug(f"Generated file ID and Unique ID for message with ID {message_id}")
         if not file_id:
@@ -60,11 +38,6 @@ class ByteStreamer:
         return self.cached_file_ids[message_id]
 
     async def generate_media_session(self, client: Client, file_id: FileId) -> Session:
-        """
-        Generates the media session for the DC that contains the media file.
-        This is required for getting the bytes from Telegram servers.
-        """
-
         media_session = client.media_sessions.get(file_id.dc_id, None)
 
         if media_session is None:
@@ -120,9 +93,6 @@ class ByteStreamer:
     async def get_location(file_id: FileId) -> Union[raw.types.InputPhotoFileLocation,
                                                      raw.types.InputDocumentFileLocation,
                                                      raw.types.InputPeerPhotoFileLocation,]:
-        """
-        Returns the file location for the media file.
-        """
         file_type = file_id.file_type
 
         if file_type == FileType.CHAT_PHOTO:
@@ -171,61 +141,63 @@ class ByteStreamer:
         part_count: int,
         chunk_size: int,
     ) -> Union[str, None]:
-        """
-        Custom generator that yields the bytes of the media file.
-        Modded from <https://github.com/eyaadh/megadlbot_oss/blob/master/mega/telegram/utils/custom_download.py#L20>
-        Thanks to Eyaadh <https://github.com/eyaadh>
-        """
         client = self.client
         work_loads[index] += 1
         logger.debug(f"Starting to yielding file with client {index}.")
         media_session = await self.generate_media_session(client, file_id)
-
         current_part = 1
         location = await self.get_location(file_id)
+        retries = 0
 
         try:
-            r = await media_session.invoke(
-                raw.functions.upload.GetFile(
-                    location=location, offset=offset, limit=chunk_size
-                ),
-            )
-            if isinstance(r, raw.types.upload.File):
-                while True:
-                    chunk = r.bytes
-                    if not chunk:
-                        break
-                    elif part_count == 1:
-                        yield chunk[first_part_cut:last_part_cut]
-                    elif current_part == 1:
-                        yield chunk[first_part_cut:]
-                    elif current_part == part_count:
-                        yield chunk[:last_part_cut]
-                    else:
-                        yield chunk
-
-                    current_part += 1
-                    offset += chunk_size
-
-                    if current_part > part_count:
-                        break
-
+            while current_part <= part_count:
+                try:
                     r = await media_session.invoke(
                         raw.functions.upload.GetFile(
                             location=location, offset=offset, limit=chunk_size
-                        ),
+                        )
                     )
-        except (TimeoutError, AttributeError):
-            pass
+                    if isinstance(r, raw.types.upload.File):
+                        retries = 0  # Reset retries on success
+                        chunk = r.bytes
+                        if not chunk:
+                            logger.warning(f"Got empty chunk on part {current_part} for message {file_id.media_id}")
+                            break
+                        
+                        if part_count == 1:
+                            yield chunk[first_part_cut:last_part_cut]
+                        elif current_part == 1:
+                            yield chunk[first_part_cut:]
+                        elif current_part == part_count:
+                            yield chunk[:last_part_cut]
+                        else:
+                            yield chunk
+
+                        current_part += 1
+                        offset += chunk_size
+                    else:
+                        logger.warning(f"Received unexpected type {type(r)} when fetching chunk.")
+                        break
+
+                except TimeoutError:
+                    logger.warning(f"TimeoutError when fetching part {current_part}. Retrying...")
+                    retries += 1
+                    if retries > 5:
+                        logger.error("Max retries reached for TimeoutError. Aborting.")
+                        break
+                    await asyncio.sleep(2)
+                except FloodWait as e:
+                    logger.warning(f"FloodWait of {e.value}s on part {current_part}. Sleeping...")
+                    await asyncio.sleep(e.value)
+                except Exception as e:
+                    logger.error(f"Unexpected error in yield_file loop: {e}", exc_info=True)
+                    break
         finally:
-            logger.debug(f"Finished yielding file with {current_part} parts.")
+            logger.debug(f"Finished yielding file with {current_part-1} parts.")
             work_loads[index] -= 1
 
     
     async def clean_cache(self) -> None:
-        """
-        function to clean the cache to reduce memory usage
-        """
         while True:
             await asyncio.sleep(self.clean_timer)
             self.cached_file_ids.clear()
