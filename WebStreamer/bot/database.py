@@ -254,3 +254,30 @@ async def get_link_by_id(link_id: int):
         )
         row = await cursor.fetchone()
         return dict(row) if row else None
+async def update_link_details(link_id: int, user_id: int, password: str = None, expiry_date: datetime = None):
+    """Updates the password and/or expiry date for a given link, owned by the user."""
+    async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
+        cursor = await db.execute("SELECT 1 FROM links WHERE id = ? AND user_id = ?", (link_id, user_id))
+        if await cursor.fetchone() is None:
+            return False 
+
+        if password is not None and expiry_date is not None:
+            await db.execute(
+                "UPDATE links SET password = ?, expiry_date = ? WHERE id = ?",
+                (password, expiry_date, link_id)
+            )
+        elif password is not None:
+            await db.execute(
+                "UPDATE links SET password = ? WHERE id = ?",
+                (password, link_id)
+            )
+        elif expiry_date is not None:
+            await db.execute(
+                "UPDATE links SET expiry_date = ? WHERE id = ?",
+                (expiry_date, link_id)
+            )
+        else:
+            return True
+
+        await db.commit()
+        return True

@@ -77,6 +77,7 @@
                 <thead>
                     <tr class="bg-gray-200 text-gray-600 uppercase text-sm">
                         <th class="px-5 py-3 border-b-2 border-gray-300 text-right">{{ lang.table_header_filename }}</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-300 text-center">{{ lang.password }}</th>
                         <th class="px-5 py-3 border-b-2 border-gray-300 text-center">{{ lang.table_header_size_mb }}</th>
                         <th class="px-5 py-3 border-b-2 border-gray-300 text-center">{{ lang.table_header_operations }}</th>
                     </tr>
@@ -85,6 +86,13 @@
                     {% for link in links %}
                     <tr class="border-b border-gray-200 hover:bg-gray-50">
                         <td class="px-5 py-4 text-sm">{{ link.file_name }}</td>
+                        <td class="px-5 py-4 text-sm text-center">
+                            {% if link.password %}
+                                <code class="bg-gray-200 px-2 py-1 rounded">{{ link.password }}</code>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
                         <td class="px-5 py-4 text-sm text-center whitespace-nowrap">{{ "%.2f"|format(link.file_size_mb) }}</td>
                         <td class="px-5 py-4 text-sm text-center space-x-4 space-x-reverse">
                             <a href="{{ link.stream_link }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">{{ lang.open_button }}</a>
@@ -97,7 +105,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="3" class="text-center py-10 text-gray-500">{{ lang.no_links_user }}</td>
+                        <td colspan="4" class="text-center py-10 text-gray-500">{{ lang.no_links_user }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

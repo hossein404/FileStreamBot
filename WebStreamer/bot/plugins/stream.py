@@ -68,7 +68,6 @@ async def generate_single_link(m: Message):
         await m.reply_text(lang_texts.get("TRAFFIC_LIMIT_EXCEEDED").format(traffic_limit_gb=limit_gb), quote=True)
         return None, None, None, None
 
-    # --- ❗️ NEW PARSING LOGIC (IMPROVED) ❗️ ---
     password = None
     expiry_hours = None
     custom_caption = m.caption.strip() if m.caption else ''
@@ -87,12 +86,17 @@ async def generate_single_link(m: Message):
         
     expiry_date = datetime.datetime.now() + datetime.timedelta(hours=expiry_hours) if expiry_hours else None
     
-    # The rest of the caption is the filename
-    custom_base_name = custom_caption if custom_caption else None
-    original_filename = get_name(m)
+    # Use the remaining caption as the custom filename, otherwise use the original filename
+    custom_filename_from_caption = custom_caption if custom_caption else None
     
-    final_filename = (secure_filename(custom_base_name) + os.path.splitext(original_filename)[1]) if custom_base_name else original_filename
+    # Prioritize the custom filename. If it's empty, fall back to the original.
+    # secure_filename ensures the name is safe.
+    final_filename = secure_filename(custom_filename_from_caption) if custom_filename_from_caption else get_name(m)
     
+    # Fallback if the caption only contained commands and is now empty
+    if not final_filename:
+        final_filename = get_name(m)
+
     log_msg = await m.copy(chat_id=Var.BIN_CHANNEL)
     file_unique_id = await parse_file_unique_id(m)
     await add_or_update_user(user_id, m.from_user.first_name, m.from_user.last_name or '', m.from_user.username or '')

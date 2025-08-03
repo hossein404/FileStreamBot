@@ -5,7 +5,7 @@ import asyncio
 translations = {
     'fa': {
         # --- بخش ربات تلگرام ---
-        "START_TEXT": "👋 **سلام {mention} عزیز!**\n\nمن ربات استریم فایل هستم. هر فایلی رو برام بفرستی، در یک چشم به هم زدن لینک مستقیمش رو بهت تحویل میدم. 🚀\n\n**قابلیت‌های ربات:**\n» با دستور /mylinks می‌تونی لینک‌هات رو مدیریت کنی.\n» با دستور /stats می‌تونی وضعیت حسابت رو ببینی.\n» برای گذاشتن رمز روی فایل از `/p password` و برای تاریخ انقضا از `/e hours` در کپشن فایل استفاده کن.",
+        "START_TEXT": "👋 **سلام {mention} عزیز!**\n\nمن ربات استریم فایل هستم. هر فایلی رو برام بفرستی، در یک چشم به هم زدن لینک مستقیمش رو بهت تحویل میدم. 🚀\n\n**قابلیت‌های ربات:**\n» با دستور /mylinks می‌تونی لینک‌هات رو مدیریت کنی.\n» با دستور /stats می‌تونی وضعیت حسابت رو ببینی.\n» برای گذاشتن رمز روی فایل از `/p password` و برای تاریخ انقضا از `/e hours` در کپشن فایل استفاده کن.\n» برای ویرایش لینک‌های ساخته شده (گذاشتن رمز یا تاریخ انقضا) از دستور /edit در پاسخ به لینک استفاده کن.",
         "START_FOOTER": "\nبرای شروع، یک فایل رو **فوروارد** یا **آپلود** کن.",
         "RATE_LIMIT_INFO": "» برای جلوگیری از اسپم، شما می‌توانید `{max_requests}` فایل در هر `{time_window}` ثانیه ارسال کنید.\n",
         "DEVELOPER_BUTTON": "👨‍💻 توسعه‌دهنده",
@@ -54,6 +54,12 @@ translations = {
         "mylinks_back": "◀️ بازگشت",
         "mylinks_link_not_found": "خطا: لینک یافت نشد یا حذف شده است.",
         "mylinks_link_sent": "لینک در پیام جدید برای شما ارسال شد.",
+        "EDIT_COMMAND_USAGE": "دستور اشتباه است! \n\n**روش استفاده صحیح:**\n`{command}`\n\nشما باید این دستور را در پاسخ به پیامی که ربات حاوی لینک برای شما ارسال کرده، بزنید.",
+        "EDIT_SUCCESS": "✅ **تنظیمات لینک با موفقیت بروزرسانی شد!**\n\n{changes}",
+        "EDIT_NO_CHANGES": "⚠️ هیچ تغییری برای اعمال وجود نداشت.",
+        "EDIT_NOT_OWNER": "خطا: شما نمی‌توانید این لینک را ویرایش کنید.",
+        "EDIT_PASSWORD_SET": "🔒 رمز عبور جدید: `{password}`",
+        "EDIT_EXPIRY_SET": "⏳ انقضای جدید تا: `{hours}` ساعت دیگر",
 
         # --- بخش پنل مدیریت ---
         "admin_panel": "پنل مدیریت",
@@ -185,8 +191,6 @@ translations = {
         "send_private_message_btn": "ارسال پیام خصوصی",
         "delete_all_links_btn": "حذف تمام لینک‌ها",
         "confirm_delete_all_links": "آیا از حذف تمام لینک‌های این کاربر مطمئن هستید؟",
-        "settings_header": "تنظیمات ربات",
-        "settings_subheader": "تغییر تنظیمات اصلی ربات به صورت زنده. تغییرات بلافاصله اعمال می‌شوند.",
         "force_join_settings": "تنظیمات عضویت اجباری",
         "force_join_channel_id": "ID یا یوزرنیم کانال عضویت اجباری",
         "force_join_placeholder": "مثال: -100123456789 یا @mychannel",
@@ -195,7 +199,7 @@ translations = {
     },
     'en': {
         # --- Telegram Bot ---
-        "START_TEXT": "👋 **Hi {mention}!**\n\nI am a file streaming bot. Send me any file, and I'll give you a direct link in a flash. 🚀\n\n**Bot Features:**\n» Use /mylinks to manage your links.\n» Use /stats to see your account status.\n» Use `/p password` for passwords and `/e hours` for expiry in the file caption.",
+        "START_TEXT": "👋 **Hi {mention}!**\n\nI am a file streaming bot. Send me any file, and I'll give you a direct link in a flash. 🚀\n\n**Bot Features:**\n» Use /mylinks to manage your links.\n» Use /stats to see your account status.\n» Use `/p password` for passwords and `/e hours` for expiry in the file caption.\n» To edit existing links (set password/expiry), reply to the link with the /edit command.",
         "START_FOOTER": "\nTo get started, **forward** or **upload** a file.",
         "RATE_LIMIT_INFO": "» To prevent spam, you can send `{max_requests}` files every `{time_window}` seconds.\n",
         "DEVELOPER_BUTTON": "👨‍💻 Developer",
@@ -244,6 +248,12 @@ translations = {
         "mylinks_back": "◀️ Back",
         "mylinks_link_not_found": "Error: Link not found or has been deleted.",
         "mylinks_link_sent": "The link has been sent to you in a new message.",
+        "EDIT_COMMAND_USAGE": "Invalid command usage! \n\n**Correct format:**\n`{command}`\n\nYou must send this command as a reply to the message the bot sent you with the link.",
+        "EDIT_SUCCESS": "✅ **Link settings updated successfully!**\n\n{changes}",
+        "EDIT_NO_CHANGES": "⚠️ No changes were applied.",
+        "EDIT_NOT_OWNER": "Error: You cannot edit this link.",
+        "EDIT_PASSWORD_SET": "🔒 New Password: `{password}`",
+        "EDIT_EXPIRY_SET": "⏳ New Expiry: `{hours}` hours from now",
 
         # --- Admin Panel ---
         "admin_panel": "Admin Panel",
@@ -375,13 +385,11 @@ translations = {
         "send_private_message_btn": "Send Private Message",
         "delete_all_links_btn": "Delete All Links",
         "confirm_delete_all_links": "Are you sure you want to delete all links for this user?",
-        "settings_header": "Bot Settings",
-        "settings_subheader": "Modify the main settings of the bot in real-time. Changes are applied immediately.",
         "force_join_settings": "Force Subscription Settings",
         "force_join_channel_id": "Force Join Channel ID or Username",
         "force_join_placeholder": "Example: -100123456789 or @mychannel",
         "force_join_desc": "Leave empty to disable. The bot must be an admin in the channel.",
-        "rate_limit_settings": "Rate Limit Settings"
+        "rate_limit_settings": "Rate Limit Settings",
     }
 }
 
