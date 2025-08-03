@@ -34,7 +34,6 @@
 2.  **نصب پیش‌نیاز (Redis):**
     این پروژه برای پایداری جلسات ورود ادمین به Redis نیاز دارد. آن را روی سرور خود نصب کنید.
     ```bash
-    # برای سرورهای Debian/Ubuntu
     sudo apt update
     sudo apt install redis-server -y
     sudo systemctl enable redis-server.service
@@ -55,38 +54,38 @@
 5.  **تنظیم متغیرهای محیطی:**
     یک فایل `.env` با ساختار زیر ایجاد کرده و اطلاعات خود را وارد کنید.
 
-    ```ini
-    # این مقادیر را از my.telegram.org دریافت کنید
+ ```ini
+    # Get this from my.telegram.org
     API_ID=
     API_HASH=
 
-    # توکن ربات از @BotFather
+    # Get this from @BotFather
     BOT_TOKEN=
 
-    # آیدی کانالی که فایل‌ها در آن ذخیره می‌شوند (ربات باید ادمین باشد)
-    # برای کانال خصوصی، آیدی منفی آن را وارد کنید (مثال: -100123456789)
+    # This is a channel ID for storing files. The bot must be an admin in this channel.
+    # It can be a public or private channel. For private channels, use its negative ID (e.g., -100123456789).
     BIN_CHANNEL=
 
-    # آیدی عددی اکانت ادمین اصلی ربات
+    # Your Telegram user ID. The bot will recognize you as the owner.
     OWNER_ID=
 
-    # پورتی که وب‌سرور روی آن اجرا می‌شود
+    # The port on which the web server will listen. Default is 8080.
     PORT=
 
-    # آدرس دامنه یا آی‌پی عمومی سرور شما
+    # Your server's public IP address or a Fully Qualified Domain Name (FQDN).
     FQDN=
 
-    # اگر از SSL (HTTPS) استفاده می‌کنید، true قرار دهید
+    # Set to "true" if you are using SSL/TLS (HTTPS), otherwise "false".
     HAS_SSL=
 
-    # برای ذخیره فایل session پایروگرام، true قرار دهید
+    # Set to "true" to save pyrogram session files.
     USE_SESSION_FILE=
 
-    # مشخصات ورود به پنل مدیریت
+    # Credentials for the web admin panel.
     ADMIN_USERNAME=
-    ADMIN_PASSWORD_HASH= # در مرحله بعد ساخته می‌شود
+    ADMIN_PASSWORD_HASH= # Generate this in the next step
 
-    # آدرس سرور Redis برای مدیریت جلسات ورود
+    # Redis URL for persistent admin sessions
     REDIS_URL=redis://localhost:6379/0
     ```
 
