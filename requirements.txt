@@ -8,3 +8,5 @@ python-dotenv>=1.0.0
 aiosqlite>=0.20.0
 pytz
 bcrypt>=4.0.0
+aiohttp-session==2.12.1
+aioredis==2.0.1
