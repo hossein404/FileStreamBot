@@ -5,13 +5,15 @@ import math
 import logging
 import mimetypes
 import asyncio
+import datetime
 from aiohttp import web
 from urllib.parse import unquote_plus
 from aiohttp.http_exceptions import BadStatusLine
 from WebStreamer.bot import multi_clients, work_loads
 from WebStreamer.errors import FIleNotFound, InvalidHash
 from WebStreamer import Var, utils, StartTime, __version__, StreamBot
-from WebStreamer.bot.database import is_link_active, increment_link_views
+from WebStreamer.bot.database import get_link_with_owner_info, increment_link_views
+import aiohttp_jinja2 # For password page
 
 logger = logging.getLogger("routes")
 routes = web.RouteTableDef()
@@ -27,10 +29,10 @@ async def root_route_handler(_):
     )
 
 @routes.get(r"/{path:.+}", allow_head=True)
+@routes.post(r"/{path:.+}")
 async def stream_handler(request: web.Request):
     try:
         path = request.match_info["path"]
-        secure_hash = request.rel_url.query.get("hash")
         
         if '/' in path:
             message_id_str, filename_encoded = path.split('/', 1)
@@ -40,11 +42,32 @@ async def stream_handler(request: web.Request):
             message_id = int(path)
             custom_filename = None
         
+        secure_hash = request.rel_url.query.get("hash")
         if not secure_hash:
             raise InvalidHash("Hash parameter is missing or invalid.")
 
-        if not await is_link_active(message_id):
-            return web.Response(status=410, text="410 Gone: This link has been deleted or has expired.")
+        link_info = await get_link_with_owner_info(message_id)
+        if not link_info:
+            return web.Response(status=404, text="404 Not Found: Link does not exist.")
+
+        if not link_info['is_active'] or link_info['is_banned']:
+            return web.Response(status=410, text="410 Gone: This link has been deleted or the owner is banned.")
+
+        if link_info['expiry_date'] and datetime.datetime.now() > link_info['expiry_date']:
+            return web.Response(status=410, text="410 Gone: This link has expired.")
+
+        if link_info['password']:
+            password_from_user = None
+            if request.method == "POST":
+                data = await request.post()
+                password_from_user = data.get("password")
+            
+            if password_from_user != link_info['password']:
+                # Show password prompt page
+                context = {"request": request, "message_id": message_id, "file_name": custom_filename}
+                if password_from_user is not None: # if password was submitted but incorrect
+                    context["error"] = "Incorrect password"
+                return await aiohttp_jinja2.render_template_async('password.html', request, context)
 
         # Increment view count in the background
         asyncio.create_task(increment_link_views(message_id))
@@ -52,9 +75,8 @@ async def stream_handler(request: web.Request):
         return await media_streamer(request, message_id, secure_hash, custom_filename)
 
     except (ConnectionError, ConnectionResetError, asyncio.CancelledError):
-        # This will now catch the error cleanly and prevent the CRITICAL log.
         logger.info("Client connection closed unexpectedly. This is normal for media streaming.")
-        return web.Response(status=200) # Sending a dummy response to close the connection gracefully
+        return web.Response(status=200)
     except InvalidHash as e:
         raise web.HTTPForbidden(text=str(e))
     except FIleNotFound as e:
@@ -117,12 +139,10 @@ async def media_streamer(request: web.Request, message_id: int, secure_hash: str
     )
     await resp.prepare(request)
 
-    # The main change is now in the outer stream_handler function.
-    # We still keep this block to stop the generator, but the main error is handled outside.
     async for chunk in body:
         try:
             await resp.write(chunk)
         except (ConnectionResetError, asyncio.CancelledError):
-            break # Exit the loop, the outer handler will catch the main exception
+            break
     
     return resp

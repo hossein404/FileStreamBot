@@ -23,15 +23,31 @@
     </div>
 </div>
 
-<div class="bg-white rounded-lg shadow-md p-6">
-    <h2 class="text-xl font-semibold mb-4">{{ lang.new_users_chart_title }}</h2>
-    <canvas id="dailyJoinsChart"></canvas>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">{{ lang.new_users_chart_title }}</h2>
+        <canvas id="dailyJoinsChart"></canvas>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">{{ lang.daily_uploads_chart_title }}</h2>
+        <canvas id="dailyUploadsChart"></canvas>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6 lg:col-span-2">
+        <h2 class="text-xl font-semibold mb-4">{{ lang.file_types_chart_title }}</h2>
+        <div class="max-w-sm mx-auto">
+            <canvas id="fileTypesChart"></canvas>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const defaultBorderColor = 'rgb(79, 70, 229)';
+    const defaultBackgroundColor = 'rgba(79, 70, 229, 0.1)';
+
+    // Daily Joins Chart
     fetch("{{ request.app.router['api_daily_joins'].url_for() }}?token={{ token }}")
         .then(response => response.json())
         .then(data => {
@@ -41,28 +57,66 @@ document.addEventListener('DOMContentLoaded', function () {
                 data: {
                     labels: data.labels,
                     datasets: [{
-                        label: data.label_text, // Use label from API
+                        label: data.label_text,
                         data: data.data,
-                        borderColor: 'rgb(79, 70, 229)',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderColor: defaultBorderColor,
+                        backgroundColor: defaultBackgroundColor,
                         fill: true,
                         tension: 0.3
                     }]
                 },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
-                }
+                options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
             });
         })
-        .catch(error => console.error('Error fetching chart data:', error));
+        .catch(error => console.error('Error fetching daily joins data:', error));
+    
+    // Daily Uploads Chart
+    fetch("{{ request.app.router['api_daily_uploads'].url_for() }}?token={{ token }}")
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('dailyUploadsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: data.label_text,
+                        data: data.data,
+                        borderColor: 'rgb(22, 163, 74)',
+                        backgroundColor: 'rgba(22, 163, 74, 0.2)',
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+        })
+        .catch(error => console.error('Error fetching daily uploads data:', error));
+
+    // File Types Chart
+    fetch("{{ request.app.router['api_file_types'].url_for() }}?token={{ token }}")
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('fileTypesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: data.label_text,
+                        data: data.data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)'
+                        ],
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        })
+        .catch(error => console.error('Error fetching file types data:', error));
 });
 </script>
 {% endblock %}

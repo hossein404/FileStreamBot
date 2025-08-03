@@ -4,7 +4,8 @@ import asyncio
 
 translations = {
     'fa': {
-        "START_TEXT": "👋 **سلام {mention} عزیز!**\n\nمن ربات استریم فایل هستم. هر فایلی رو برام بفرستی، در یک چشم به هم زدن لینک مستقیمش رو بهت تحویل میدم. 🚀\n\n**قابلیت‌های ربات:**\n» با دستور /mylinks می‌تونی لینک‌هات رو مدیریت و حذف کنی.\n» با دستور /stats می‌تونی وضعیت حسابت رو ببینی.",
+        # --- بخش ربات تلگرام ---
+        "START_TEXT": "👋 **سلام {mention} عزیز!**\n\nمن ربات استریم فایل هستم. هر فایلی رو برام بفرستی، در یک چشم به هم زدن لینک مستقیمش رو بهت تحویل میدم. 🚀\n\n**قابلیت‌های ربات:**\n» با دستور /mylinks می‌تونی لینک‌هات رو مدیریت کنی.\n» با دستور /stats می‌تونی وضعیت حسابت رو ببینی.\n» برای گذاشتن رمز روی فایل از `/p password` و برای تاریخ انقضا از `/e hours` در کپشن فایل استفاده کن.",
         "START_FOOTER": "\nبرای شروع، یک فایل رو **فوروارد** یا **آپلود** کن.",
         "RATE_LIMIT_INFO": "» برای جلوگیری از اسپم، شما می‌توانید `{max_requests}` فایل در هر `{time_window}` ثانیه ارسال کنید.\n",
         "DEVELOPER_BUTTON": "👨‍💻 توسعه‌دهنده",
@@ -14,6 +15,8 @@ translations = {
         "TRAFFIC_LIMIT_EXCEEDED": "🚫 **حجم شما تمام شده است!**\n\nشما تمامِ حجم اختصاص یافته ({traffic_limit_gb} GB) را مصرف کرده‌اید. برای تمدید با ادمین تماس بگیرید.",
         "RATE_LIMIT_ERROR": "🐢 **شما بیش از حد درخواست داده‌اید!**\n\nلطفاً `{time_window}` ثانیه صبر کنید و دوباره تلاش کنید.",
         "LINK_GENERATED": "✅ **لینک شما با موفقیت ساخته شد!**\n\n📂 **نام فایل:** `{final_filename}`\n⚖️ **حجم فایل:** `{file_size_in_mb:.2f} MB`",
+        "LINK_HAS_PASSWORD": "🔒 **رمز عبور:** `{password}`",
+        "LINK_HAS_EXPIRY": "⏳ **انقضا تا:** `{hours}` ساعت دیگر",
         "OPEN_LINK_BUTTON": "🚀 باز کردن لینک",
         "COPY_LINK_BUTTON": "📋 کپی لینک",
         "LINK_COPIED_SUCCESS": "لینک در پیام جدید برای شما ارسال شد.",
@@ -39,7 +42,20 @@ translations = {
         "STATS_UPDATED": "آمار بروزرسانی شد!",
         "NO_CHANGE_IN_STATS": "تغییری در آمار شما وجود ندارد.",
         "STATS_ERROR": "خطایی رخ داد!",
+        "FORCE_SUB_MESSAGE": "❗️ **توجه:** برای استفاده از ربات، ابتدا باید در کانال زیر عضو شوید. پس از عضویت، دوباره امتحان کنید.",
+        "JOIN_CHANNEL_BUTTON": "✨ عضویت در کانال",
+        "FORCE_SUB_BOT_NOT_ADMIN": "خطای سیستمی: ربات در کانال عضویت اجباری ادمین نیست. لطفاً به مدیر اطلاع دهید.",
+        "album_processing": "درحال پردازش آلبوم... این کار ممکن است کمی طول بکشد.",
+        "album_success": "✅ **لینک‌های آلبوم شما با موفقیت ساخته شد!**",
+        "album_error": "خطایی در ساخت لینک‌های آلبوم رخ داد.",
+        "mylinks_choose_action": "گزینه مورد نظر برای فایل `{file_name}` را انتخاب کنید:",
+        "mylinks_get_link": "🔗 دریافت لینک",
+        "mylinks_delete_link": "🗑️ حذف لینک",
+        "mylinks_back": "◀️ بازگشت",
+        "mylinks_link_not_found": "خطا: لینک یافت نشد یا حذف شده است.",
+        "mylinks_link_sent": "لینک در پیام جدید برای شما ارسال شد.",
 
+        # --- بخش پنل مدیریت ---
         "admin_panel": "پنل مدیریت",
         "dashboard": "داشبورد",
         "users": "کاربران",
@@ -56,8 +72,12 @@ translations = {
         "total_users": "تعداد کل کاربران",
         "active_links": "لینک‌های فعال",
         "total_traffic": "ترافیک مصرفی",
-        "new_users_chart_title": "کاربران جدید در ۷ روز گذشته",
+        "new_users_chart_title": "کاربران جدید (۷ روز اخیر)",
         "new_users_chart_label": "تعداد کاربران جدید",
+        "daily_uploads_chart_title": "آپلودهای روزانه (۷ روز اخیر)",
+        "new_uploads_chart_label": "تعداد آپلودها",
+        "file_types_chart_title": "توزیع انواع فایل",
+        "file_types_chart_label": "نوع فایل",
         "add_user_title": "افزودن کاربر جدید",
         "back_to_users_list": "بازگشت به لیست کاربران",
         "add_user_header": "افزودن کاربر جدید",
@@ -84,12 +104,11 @@ translations = {
         "action_unban": "رفع مسدودیت",
         "no_users_found": "هیچ کاربری یافت نشد.",
         "broadcast_header": "پیام همگانی (Broadcast)",
-        "broadcast_subheader": "ارسال پیام به تمام کاربران فعال ربات.",
+        "broadcast_subheader": "ارسال پیام به تمام کاربران فعال ربات. برای افزودن دکمه از فرمت `[متن](لینک)` استفاده کنید.",
         "message_text_label": "متن پیام:",
         "message_placeholder": "پیام خود را اینجا بنویسید...",
         "send_message_button": "ارسال پیام",
         "broadcast_success": "پیام با موفقیت به {successful_sends} کاربر ارسال شد. {failed_sends} ارسال ناموفق بود.",
-        # --- User Details Page ---
         "user_details_title": "جزئیات کاربر",
         "user_details_header": "جزئیات کاربر: {first_name} {last_name}",
         "user_info": "اطلاعات کاربر",
@@ -112,13 +131,10 @@ translations = {
         "delete_button": "حذف",
         "no_links_user": "این کاربر هنوز لینکی نساخته است.",
         "unknown_user": "ناشناس",
-
-        # --- کلیدهای جدید ---
         "search_links": "جستجوی لینک‌ها",
         "robot_settings": "تنظیمات ربات",
         "server_logs": "لاگ‌های سرور",
         "login_logs": "لاگ‌های ورود",
-
         "settings_header": "تنظیمات ربات",
         "settings_subheader": "تغییر تنظیمات اصلی ربات به صورت زنده. تغییرات بلافاصله اعمال می‌شوند.",
         "settings_saved_success": "تنظیمات با موفقیت ذخیره شد.",
@@ -130,7 +146,6 @@ translations = {
         "time_window_desc": "بازه زمانی که محدودیت تعداد درخواست در آن اعمال می‌شود (به ثانیه).",
         "active": "فعال",
         "inactive": "غیرفعال",
-
         "search_links_header": "جستجو و مدیریت لینک‌ها",
         "search_links_subheader": "جستجو در میان تمام لینک‌های ساخته شده توسط کاربران و انجام عملیات دسته‌جمعی.",
         "search_by_filename": "نام فایل",
@@ -144,17 +159,14 @@ translations = {
         "delete_selected_btn": "حذف موارد انتخاب شده",
         "confirm_delete_selected": "آیا از حذف (غیرفعال کردن) لینک‌های انتخاب شده مطمئن هستید؟ این عمل غیرقابل بازگشت است.",
         "table_header_file": "فایل",
-        "table_header_user": "کاربر",
         "table_header_views": "بازدید",
         "table_header_creation_date": "تاریخ ساخت",
         "no_links_found_search": "هیچ لینکی مطابق با جستجوی شما یافت نشد.",
-
         "server_logs_header": "لاگ‌های سرور",
         "server_logs_subheader": "نمایش ۲۰۰ خط آخر از فایل لاگ ربات (`streambot.log`).",
         "reload_btn": "بارگذاری مجدد",
         "log_file_not_found": "فایل لاگ یافت نشد.",
         "log_file_read_error": "خطا در خواندن فایل لاگ: {error}",
-
         "login_logs_header": "گزارش تلاش‌های ورود",
         "login_logs_subheader": "مشاهده تلاش‌های موفق و ناموفق برای ورود به پنل مدیریت.",
         "table_header_time": "زمان",
@@ -163,36 +175,27 @@ translations = {
         "login_status_success": "موفق",
         "login_status_failed": "ناموفق",
         "no_login_logs": "هیچ گزارشی برای نمایش وجود ندارد.",
-
         "send_message_to_user_header": "ارسال پیام به کاربر",
         "send_message_to_user_subheader": "این پیام به صورت خصوصی برای کاربر در ربات ارسال خواهد شد.",
         "back_to_user_details": "بازگشت به جزئیات کاربر",
-        "message_text_label": "متن پیام:",
-        "message_placeholder": "پیام خود را اینجا بنویسید...",
-        "send_message_button": "ارسال پیام",
         "message_sent_success": "پیام با موفقیت ارسال شد.",
         "message_sent_fail_blocked": "ارسال ناموفق: کاربر ربات را مسدود کرده است.",
         "message_sent_fail_unknown": "خطای ناشناخته: {error}",
         "message_cannot_be_empty": "متن پیام نمی‌تواند خالی باشد.",
-        "album_processing": "درحال پردازش آلبوم... این کار ممکن است کمی طول بکشد.",
-        "album_success": "✅ **لینک‌های آلبوم شما با موفقیت ساخته شد!**",
-        "album_error": "خطایی در ساخت لینک‌های آلبوم رخ داد.",
-        "link_filename_label": "نام فایل",
-        "link_filesize_label": "حجم",
-        "link_link_label": "لینک",
-        "mylinks_choose_action": "گزینه مورد نظر برای فایل `{file_name}` را انتخاب کنید:",
-        "mylinks_get_link": "🔗 دریافت لینک",
-        "mylinks_delete_link": "🗑️ حذف لینک",
-        "mylinks_back": "◀️ بازگشت",
-        "mylinks_link_not_found": "خطا: لینک یافت نشد یا حذف شده است.",
-        "mylinks_link_sent": "لینک در پیام جدید برای شما ارسال شد.",
         "send_private_message_btn": "ارسال پیام خصوصی",
         "delete_all_links_btn": "حذف تمام لینک‌ها",
-        "confirm_delete_all_links": "آیا از حذف تمام لینک‌های این کاربر مطمئن هستید؟"
+        "confirm_delete_all_links": "آیا از حذف تمام لینک‌های این کاربر مطمئن هستید؟",
+        "settings_header": "تنظیمات ربات",
+        "settings_subheader": "تغییر تنظیمات اصلی ربات به صورت زنده. تغییرات بلافاصله اعمال می‌شوند.",
+        "force_join_settings": "تنظیمات عضویت اجباری",
+        "force_join_channel_id": "ID یا یوزرنیم کانال عضویت اجباری",
+        "force_join_placeholder": "مثال: -100123456789 یا @mychannel",
+        "force_join_desc": "برای غیرفعال کردن، این فیلد را خالی بگذارید. ربات باید در کانال ادمین باشد.",
+        "rate_limit_settings": "تنظیمات محدودیت درخواست"
     },
     'en': {
         # --- Telegram Bot ---
-        "START_TEXT": "👋 **Hi {mention}!**\n\nI am a file streaming bot. Send me any file, and I'll give you a direct link in a flash. 🚀\n\n**Bot Features:**\n» Use /mylinks to manage and delete your links.\n» Use /stats to see your account status.",
+        "START_TEXT": "👋 **Hi {mention}!**\n\nI am a file streaming bot. Send me any file, and I'll give you a direct link in a flash. 🚀\n\n**Bot Features:**\n» Use /mylinks to manage your links.\n» Use /stats to see your account status.\n» Use `/p password` for passwords and `/e hours` for expiry in the file caption.",
         "START_FOOTER": "\nTo get started, **forward** or **upload** a file.",
         "RATE_LIMIT_INFO": "» To prevent spam, you can send `{max_requests}` files every `{time_window}` seconds.\n",
         "DEVELOPER_BUTTON": "👨‍💻 Developer",
@@ -202,6 +205,8 @@ translations = {
         "TRAFFIC_LIMIT_EXCEEDED": "🚫 **You have run out of data!**\n\nYou have used all of your allocated data ({traffic_limit_gb} GB). Please contact the admin to renew.",
         "RATE_LIMIT_ERROR": "🐢 **You are making too many requests!**\n\nPlease wait for `{time_window}` seconds and try again.",
         "LINK_GENERATED": "✅ **Your link was created successfully!**\n\n📂 **File Name:** `{final_filename}`\n⚖️ **File Size:** `{file_size_in_mb:.2f} MB`",
+        "LINK_HAS_PASSWORD": "🔒 **Password:** `{password}`",
+        "LINK_HAS_EXPIRY": "⏳ **Expires in:** `{hours}` hours",
         "OPEN_LINK_BUTTON": "🚀 Open Link",
         "COPY_LINK_BUTTON": "📋 Copy Link",
         "LINK_COPIED_SUCCESS": "The link has been sent to you in a new message.",
@@ -227,6 +232,18 @@ translations = {
         "STATS_UPDATED": "Stats updated!",
         "NO_CHANGE_IN_STATS": "There is no change in your stats.",
         "STATS_ERROR": "An error occurred!",
+        "FORCE_SUB_MESSAGE": "❗️ **Attention:** To use the bot, you must first join the channel below. After joining, please try again.",
+        "JOIN_CHANNEL_BUTTON": "✨ Join Channel",
+        "FORCE_SUB_BOT_NOT_ADMIN": "System Error: The bot is not an admin in the force-subscribe channel. Please inform the administrator.",
+        "album_processing": "Processing album... This might take a moment.",
+        "album_success": "✅ **Your album links were created successfully!**",
+        "album_error": "An error occurred while creating album links.",
+        "mylinks_choose_action": "Choose an action for the file `{file_name}`:",
+        "mylinks_get_link": "🔗 Get Link",
+        "mylinks_delete_link": "🗑️ Delete Link",
+        "mylinks_back": "◀️ Back",
+        "mylinks_link_not_found": "Error: Link not found or has been deleted.",
+        "mylinks_link_sent": "The link has been sent to you in a new message.",
 
         # --- Admin Panel ---
         "admin_panel": "Admin Panel",
@@ -245,8 +262,12 @@ translations = {
         "total_users": "Total Users",
         "active_links": "Active Links",
         "total_traffic": "Total Traffic",
-        "new_users_chart_title": "New Users in the Last 7 Days",
-        "new_users_chart_label": "Number of New Users",
+        "new_users_chart_title": "New Users (Last 7 Days)",
+        "new_users_chart_label": "New Users",
+        "daily_uploads_chart_title": "Daily Uploads (Last 7 Days)",
+        "new_uploads_chart_label": "Uploads",
+        "file_types_chart_title": "File Type Distribution",
+        "file_types_chart_label": "File Type",
         "add_user_title": "Add New User",
         "back_to_users_list": "Back to Users List",
         "add_user_header": "Add New User",
@@ -273,12 +294,11 @@ translations = {
         "action_unban": "Unban",
         "no_users_found": "No users found.",
         "broadcast_header": "Broadcast Message",
-        "broadcast_subheader": "Send a message to all active bot users.",
+        "broadcast_subheader": "Send a message to all active bot users. Use `[text](link)` format for buttons.",
         "message_text_label": "Message Text:",
         "message_placeholder": "Write your message here...",
         "send_message_button": "Send Message",
         "broadcast_success": "Message sent successfully to {successful_sends} users. {failed_sends} failed.",
-        # --- User Details Page ---
         "user_details_title": "User Details",
         "user_details_header": "User Details: {first_name} {last_name}",
         "user_info": "User Information",
@@ -301,13 +321,10 @@ translations = {
         "delete_button": "Delete",
         "no_links_user": "This user has not created any links yet.",
         "unknown_user": "Unknown",
-        
-        # --- New Keys ---
         "search_links": "Search Links",
         "robot_settings": "Bot Settings",
         "server_logs": "Server Logs",
         "login_logs": "Login Logs",
-
         "settings_header": "Bot Settings",
         "settings_subheader": "Modify the main settings of the bot in real-time. Changes are applied immediately.",
         "settings_saved_success": "Settings saved successfully.",
@@ -319,7 +336,6 @@ translations = {
         "time_window_desc": "The time window in which the request limit is applied (in seconds).",
         "active": "Active",
         "inactive": "Inactive",
-        
         "search_links_header": "Search & Manage Links",
         "search_links_subheader": "Search through all links created by users and perform bulk operations.",
         "search_by_filename": "File Name",
@@ -333,17 +349,14 @@ translations = {
         "delete_selected_btn": "Delete Selected",
         "confirm_delete_selected": "Are you sure you want to delete (deactivate) the selected links? This action is irreversible.",
         "table_header_file": "File",
-        "table_header_user": "User",
         "table_header_views": "Views",
         "table_header_creation_date": "Creation Date",
         "no_links_found_search": "No links found matching your search criteria.",
-        
         "server_logs_header": "Server Logs",
         "server_logs_subheader": "Displaying the last 200 lines from the bot's log file (`streambot.log`).",
         "reload_btn": "Reload",
         "log_file_not_found": "Log file not found.",
         "log_file_read_error": "Error reading log file: {error}",
-        
         "login_logs_header": "Login Attempts Report",
         "login_logs_subheader": "View successful and failed attempts to log into the admin panel.",
         "table_header_time": "Time",
@@ -352,35 +365,25 @@ translations = {
         "login_status_success": "Success",
         "login_status_failed": "Failed",
         "no_login_logs": "No reports to display.",
-        
         "send_message_to_user_header": "Send Message to User",
         "send_message_to_user_subheader": "This message will be sent privately to the user from the bot.",
         "back_to_user_details": "Back to User Details",
-        "message_text_label": "Message Text:",
-        "message_placeholder": "Write your message here...",
-        "send_message_button": "Send Message",
         "message_sent_success": "Message sent successfully.",
         "message_sent_fail_blocked": "Failed to send: The user has blocked the bot.",
         "message_sent_fail_unknown": "Unknown error: {error}",
         "message_cannot_be_empty": "Message text cannot be empty.",
-        "album_processing": "Processing album... This might take a moment.",
-        "album_success": "✅ **Your album links were created successfully!**",
-        "album_error": "An error occurred while creating album links.",
-        "link_filename_label": "File Name",
-        "link_filesize_label": "Size",
-        "link_link_label": "Link",
-        "mylinks_choose_action": "Choose an action for the file `{file_name}`:",
-        "mylinks_get_link": "🔗 Get Link",
-        "mylinks_delete_link": "🗑️ Delete Link",
-        "mylinks_back": "◀️ Back",
-        "mylinks_link_not_found": "Error: Link not found or has been deleted.",
-        "mylinks_link_sent": "The link has been sent to you in a new message.",
         "send_private_message_btn": "Send Private Message",
         "delete_all_links_btn": "Delete All Links",
         "confirm_delete_all_links": "Are you sure you want to delete all links for this user?",
+        "settings_header": "Bot Settings",
+        "settings_subheader": "Modify the main settings of the bot in real-time. Changes are applied immediately.",
+        "force_join_settings": "Force Subscription Settings",
+        "force_join_channel_id": "Force Join Channel ID or Username",
+        "force_join_placeholder": "Example: -100123456789 or @mychannel",
+        "force_join_desc": "Leave empty to disable. The bot must be an admin in the channel.",
+        "rate_limit_settings": "Rate Limit Settings"
     }
 }
-
 
 DB_PATH = 'database.sqlite3'
 user_lang_cache = {}
@@ -415,4 +418,6 @@ async def get_i18n_texts(user_id_or_lang_code: str | int) -> dict:
     else:
         lang = await get_user_lang(user_id_or_lang_code)
     
-    return translations.get(lang, translations['en'])
+    # Fallback to English if a key is missing in the selected language
+    # This is a shallow merge, but works for one level of keys
+    return {**translations['en'], **translations.get(lang, {})}

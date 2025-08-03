@@ -2,25 +2,18 @@
 import logging
 import aiosqlite
 import datetime
-import sqlite3  #  <--- این import مهم است
+import sqlite3
 from WebStreamer.vars import Var
 from WebStreamer.bot.i18n import user_lang_cache, lock
 
 DB_PATH = 'database.sqlite3'
-# --- استفاده از ثابت‌های کتابخانه استاندارد sqlite3 برای سازگاری بیشتر ---
 DETECT_TYPES = sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
 
 async def init_db():
-    """Initialize SQLite database and create/update tables."""
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
         await db.execute("PRAGMA journal_mode=WAL")
 
         # Users Table
-        cursor = await db.execute("PRAGMA table_info(users)")
-        columns = {row[1] for row in await cursor.fetchall()}
-        if 'language' not in columns:
-            await db.execute("ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'fa'")
-        
         await db.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
@@ -33,14 +26,18 @@ async def init_db():
             )
         ''')
 
-        # Links Table
+        # Links Table (with new columns)
         cursor = await db.execute("PRAGMA table_info(links)")
         columns = {row[1] for row in await cursor.fetchall()}
         if 'views' not in columns:
             await db.execute("ALTER TABLE links ADD COLUMN views INTEGER DEFAULT 0")
         if 'creation_date' not in columns:
             await db.execute("ALTER TABLE links ADD COLUMN creation_date TIMESTAMP")
-
+        if 'password' not in columns:
+            await db.execute("ALTER TABLE links ADD COLUMN password TEXT")
+        if 'expiry_date' not in columns:
+            await db.execute("ALTER TABLE links ADD COLUMN expiry_date TIMESTAMP")
+            
         await db.execute('''
             CREATE TABLE IF NOT EXISTS links (
                 id INTEGER PRIMARY KEY,
@@ -50,19 +47,14 @@ async def init_db():
                 is_active BOOLEAN DEFAULT 1,
                 views INTEGER DEFAULT 0,
                 creation_date TIMESTAMP,
+                password TEXT,
+                expiry_date TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         ''')
 
-        # Settings Table
-        await db.execute('''
-            CREATE TABLE IF NOT EXISTS settings (
-                key TEXT PRIMARY KEY,
-                value TEXT
-            )
-        ''')
-
-        # Login Attempts Table
+        # Settings & Login Attempts Tables
+        await db.execute('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)')
         await db.execute('''
             CREATE TABLE IF NOT EXISTS login_attempts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,12 +74,36 @@ async def add_owner_as_user():
                 (Var.OWNER_ID, datetime.datetime.now(), None)
             )
             await db.commit()
-            
-# --- Core Functions (from original file, mostly unchanged) ---
+
 async def add_or_update_user(user_id: int, first_name: str, last_name: str, username: str):
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
         await db.execute("UPDATE users SET first_name=?, last_name=?, username=? WHERE id=?", (first_name, last_name, username, user_id))
         await db.commit()
+
+async def insert_link(user_id: int, link_id: int, file_name: str, file_size_mb: float, file_unique_id: str, password: str = None, expiry_date: datetime = None):
+    async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
+        await db.execute(
+            "INSERT INTO links (id, user_id, file_name, file_size_mb, file_unique_id, creation_date, password, expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (link_id, user_id, file_name, file_size_mb, file_unique_id, datetime.datetime.now(), password, expiry_date)
+        )
+        await db.commit()
+
+async def get_link_with_owner_info(link_id: int) -> dict:
+    """Returns link details along with owner's ban status."""
+    async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            """
+            SELECT l.id, l.is_active, l.password, l.expiry_date, u.is_banned
+            FROM links l JOIN users u ON l.user_id = u.id
+            WHERE l.id = ?
+            """,
+            (link_id,)
+        )
+        row = await cursor.fetchone()
+        return dict(row) if row else None
+
+# ... (other functions remain mostly the same, only adding new ones)
 async def set_user_lang(user_id: int, lang_code: str):
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
         async with lock:
@@ -111,9 +127,14 @@ async def unban_user(user_id: int):
 async def is_link_active(link_id: int) -> bool:
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
         return (res := await (await db.execute("SELECT is_active FROM links WHERE id = ?", (link_id,))).fetchone()) and res[0] == 1
-async def count_user_links(user_id: int) -> int:
+async def count_user_links(user_id: int, query: str = None) -> int:
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
-        return (await (await db.execute("SELECT COUNT(id) FROM links WHERE user_id = ? AND is_active = 1", (user_id,))).fetchone())[0] or 0
+        sql = "SELECT COUNT(id) FROM links WHERE user_id = ? AND is_active = 1"
+        params = [user_id]
+        if query:
+            sql += " AND file_name LIKE ?"
+            params.append(f"%{query}%")
+        return (await (await db.execute(sql, params)).fetchone())[0] or 0
 async def delete_link(link_id: int, user_id: int):
     async with aiosqlite.connect(DB_PATH) as db: await db.execute("UPDATE links SET is_active = 0 WHERE id = ? AND user_id = ?", (link_id, user_id)); await db.commit()
 async def get_stats(user_id: int) -> tuple:
@@ -134,15 +155,19 @@ async def get_daily_join_stats():
 
 # --- New/Modified Functions for Added Features ---
 
-async def insert_link(user_id: int, link_id: int, file_name: str, file_size_mb: float, file_unique_id: str):
-    async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
-        await db.execute("INSERT INTO links (id, user_id, file_name, file_size_mb, file_unique_id, creation_date) VALUES (?, ?, ?, ?, ?, ?)", (link_id, user_id, file_name, file_size_mb, file_unique_id, datetime.datetime.now())); await db.commit()
 async def update_stats(user_id: int, file_size_mb: float):
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db: await db.execute("UPDATE users SET total_files = total_files + 1, total_size = total_size + ? WHERE id = ?", (file_size_mb, user_id)); await db.commit()
-async def get_user_links(user_id: int, offset: int, limit: int) -> list:
+async def get_user_links(user_id: int, offset: int, limit: int, query: str = None) -> list:
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
         db.row_factory = aiosqlite.Row
-        cursor = await db.execute("SELECT id, file_name, file_size_mb, views FROM links WHERE user_id = ? AND is_active = 1 ORDER BY id DESC LIMIT ? OFFSET ?", (user_id, limit, offset))
+        sql = "SELECT id, file_name, file_size_mb, views FROM links WHERE user_id = ? AND is_active = 1"
+        params = [user_id]
+        if query:
+            sql += " AND file_name LIKE ?"
+            params.append(f"%{query}%")
+        sql += " ORDER BY id DESC LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+        cursor = await db.execute(sql, params)
         return [dict(row) for row in await cursor.fetchall()]
 async def increment_link_views(link_id: int):
     async with aiosqlite.connect(DB_PATH) as db: await db.execute("UPDATE links SET views = views + 1 WHERE id = ?", (link_id,)); await db.commit()
@@ -202,7 +227,6 @@ async def deactivate_links_by_ids(link_ids: list):
 async def deactivate_user_links(user_id: int):
     async with aiosqlite.connect(DB_PATH) as db: await db.execute("UPDATE links SET is_active = 0 WHERE user_id = ?", (user_id,)); await db.commit()
 
-# --- Functions for Admin Panel (unchanged from original file) ---
 async def get_all_users_for_panel(search_query: str = None):
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
         db.row_factory = aiosqlite.Row
@@ -222,7 +246,6 @@ async def get_all_links_for_user(user_id: int):
 async def admin_delete_link(link_id: int):
     async with aiosqlite.connect(DB_PATH) as db: await db.execute("UPDATE links SET is_active = 0 WHERE id = ?", (link_id,)); await db.commit()
 async def get_link_by_id(link_id: int):
-    """اطلاعات یک لینک خاص را با استفاده از ID آن برمی‌گرداند."""
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(

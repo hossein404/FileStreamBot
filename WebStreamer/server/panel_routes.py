@@ -3,7 +3,8 @@ import asyncio
 import aiohttp_jinja2
 import secrets
 import logging
-import os  # <--- این خط اضافه شده و مشکل را حل می‌کند
+import os
+import re
 from aiohttp import web
 from urllib.parse import quote_plus, urlencode
 from WebStreamer.vars import Var
@@ -13,6 +14,87 @@ from WebStreamer.bot.i18n import get_i18n_texts
 from .security import verify_password, generate_csrf_token, validate_csrf_token
 from WebStreamer.bot.config import config
 from pyrogram.errors import UserIsBlocked, InputUserDeactivated, FloodWait
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+routes = web.RouteTableDef()
+logger = logging.getLogger("panel_routes")
+
+def parse_buttons(text: str):
+    """Parses markdown-style buttons and returns Pyrogram buttons and clean text."""
+    pattern = r'\[(.+?)\]\((.+?)\)'
+    buttons = []
+    
+    # Find all button definitions
+    matches = re.findall(pattern, text)
+    if not matches:
+        return text, None
+        
+    # Create a keyboard row for each button
+    keyboard = []
+    for match in matches:
+        button_text = match[0]
+        button_url = match[1]
+        keyboard.append([InlineKeyboardButton(button_text, url=button_url)])
+    
+    # Remove button definitions from the main text
+    clean_text = re.sub(pattern, '', text).strip()
+    
+    return clean_text, InlineKeyboardMarkup(keyboard)
+
+# ... (other routes are the same)
+
+@routes.post("/admin/broadcast", name="admin_broadcast_post")
+async def broadcast_post_route(request):
+    if not is_admin_logged_in(request): raise web.HTTPForbidden()
+    data = await request.post()
+    await validate_csrf_token(request, data.get('csrf_token'))
+    if not (message_text := data.get('message')): raise web.HTTPBadRequest(text="Message cannot be empty")
+    
+    clean_text, reply_markup = parse_buttons(message_text)
+
+    bot, user_ids = request.app['bot'], await get_all_user_ids()
+    successful_sends, failed_sends = 0, 0
+    for user_id in user_ids:
+        try:
+            await bot.send_message(
+                chat_id=user_id, 
+                text=clean_text, 
+                reply_markup=reply_markup,
+                disable_web_page_preview=True
+            )
+            successful_sends += 1
+        except (UserIsBlocked, InputUserDeactivated): failed_sends += 1
+        except FloodWait as e: await asyncio.sleep(e.value); await bot.send_message(chat_id=user_id, text=clean_text, reply_markup=reply_markup); successful_sends +=1
+        except Exception as e: failed_sends += 1; logger.error(f"Broadcast failed for user {user_id}: {e}")
+        await asyncio.sleep(0.1)
+        
+    lang = await get_panel_context(request)
+    success_text = lang['lang'].get("broadcast_success").format(successful_sends=successful_sends, failed_sends=failed_sends)
+    redirect_url = f'{request.app.router["admin_broadcast"].url_for()}?token={request.rel_url.query.get("token")}&success_message={quote_plus(success_text)}'
+    raise web.HTTPFound(redirect_url)
+
+# ... (the rest of the file remains the same)
+# Make sure to copy the entire original file and only replace the broadcast_post_route function
+# and add the required imports at the top. For simplicity, I am providing the full file again below.
+# (The user should replace the whole file)
+
+# WebStreamer/server/panel_routes.py
+import asyncio
+import aiohttp_jinja2
+import secrets
+import logging
+import os
+import re
+from aiohttp import web
+from urllib.parse import quote_plus, urlencode
+from WebStreamer.vars import Var
+from WebStreamer.utils.file_properties import get_hash
+from WebStreamer.bot.database import *
+from WebStreamer.bot.i18n import get_i18n_texts
+from .security import verify_password, generate_csrf_token, validate_csrf_token
+from WebStreamer.bot.config import config
+from pyrogram.errors import UserIsBlocked, InputUserDeactivated, FloodWait
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 routes = web.RouteTableDef()
 logger = logging.getLogger("panel_routes")
@@ -29,6 +111,27 @@ async def get_panel_context(request):
         "current_path_for_lang_switcher": f"{request.path}?{urlencode({k: v for k, v in request.rel_url.query.items()})}",
         "csrf_token": await generate_csrf_token(request)
     }
+def parse_buttons(text: str):
+    pattern = r'\[(.+?)\]\((https?://.+?)\)'
+    buttons = []
+    
+    matches = re.findall(pattern, text)
+    if not matches:
+        return text, None
+        
+    keyboard = []
+    row = []
+    for i, match in enumerate(matches):
+        button_text = match[0]
+        button_url = match[1]
+        row.append(InlineKeyboardButton(button_text, url=button_url))
+        if len(row) == 2 or i == len(matches) - 1:
+            keyboard.append(row)
+            row = []
+
+    clean_text = re.sub(pattern, '', text).strip()
+    
+    return clean_text, InlineKeyboardMarkup(keyboard) if keyboard else None
 
 # --- Login, Logout, Lang ---
 @routes.get("/set_lang/{lang_code}", name="set_panel_lang")
@@ -111,7 +214,6 @@ async def user_details_route(request):
     context["user"], context["links"] = user_details, links_data
     return context
 
-# User Add Routes
 @routes.get("/admin/users/add", name="admin_add_user")
 @aiohttp_jinja2.template('add_user.html')
 async def add_user_form(request):
@@ -132,7 +234,6 @@ async def add_user_handler(request):
     await add_user_by_admin(user_id, limit_gb)
     raise web.HTTPFound(f'/admin/users?token={request.rel_url.query.get("token")}')
 
-# Broadcast Routes
 @routes.get("/admin/broadcast", name="admin_broadcast")
 @aiohttp_jinja2.template('broadcast.html')
 async def broadcast_route(request):
@@ -148,22 +249,29 @@ async def broadcast_post_route(request):
     await validate_csrf_token(request, data.get('csrf_token'))
     if not (message_text := data.get('message')): raise web.HTTPBadRequest(text="Message cannot be empty")
         
+    clean_text, reply_markup = parse_buttons(message_text)
+    
     bot, user_ids = request.app['bot'], await get_all_user_ids()
     successful_sends, failed_sends = 0, 0
     for user_id in user_ids:
         try:
-            await bot.send_message(chat_id=user_id, text=message_text)
+            await bot.send_message(
+                chat_id=user_id, 
+                text=clean_text,
+                reply_markup=reply_markup,
+                disable_web_page_preview=(reply_markup is None)
+            )
             successful_sends += 1
         except (UserIsBlocked, InputUserDeactivated): failed_sends += 1
-        except FloodWait as e: await asyncio.sleep(e.value); await bot.send_message(chat_id=user_id, text=message_text); successful_sends +=1
+        except FloodWait as e: await asyncio.sleep(e.value); await bot.send_message(chat_id=user_id, text=clean_text, reply_markup=reply_markup); successful_sends +=1
         except Exception as e: failed_sends += 1; logger.error(f"Broadcast failed for user {user_id}: {e}")
         await asyncio.sleep(0.1)
         
-    success_text = f"پیام با موفقیت به {successful_sends} کاربر ارسال شد. {failed_sends} ارسال ناموفق بود."
+    context = await get_panel_context(request)
+    success_text = context['lang'].get("broadcast_success").format(successful_sends=successful_sends, failed_sends=failed_sends)
     redirect_url = f'{request.app.router["admin_broadcast"].url_for()}?token={request.rel_url.query.get("token")}&success_message={quote_plus(success_text)}'
     raise web.HTTPFound(redirect_url)
 
-# --- New Feature Routes ---
 @routes.get("/admin/settings", name="admin_settings")
 @aiohttp_jinja2.template('settings.html')
 async def settings_route(request):
@@ -193,7 +301,6 @@ async def server_logs_route(request):
     logger.info("Admin panel: Server Logs page accessed.")
     context = await get_panel_context(request)
     
-    # Import from the correct location
     from WebStreamer.__main__ import LOG_FILE_PATH
     
     try:
@@ -263,8 +370,13 @@ async def delete_link_route(request):
 async def settings_post_route(request):
     if not is_admin_logged_in(request): raise web.HTTPForbidden()
     data = await request.post(); await validate_csrf_token(request, data.get('csrf_token'))
+    
     for key, value in data.items():
-        if key != "csrf_token": await config.update_setting(key, value)
+        if key != "csrf_token":
+            if key == 'force_sub_channel' and not value:
+                value = '0'
+            await config.update_setting(key, value)
+            
     raise web.HTTPFound(f'/admin/settings?token={request.rel_url.query.get("token")}&saved=true')
 
 @routes.post("/admin/links/deactivate_selected", name="admin_deactivate_selected_links")
@@ -301,17 +413,16 @@ async def send_message_post_route(request):
 async def daily_uploads_api(request):
     if not is_admin_logged_in(request): raise web.HTTPForbidden()
     stats = await get_daily_uploads_stats(days=7)
-    return web.json_response({"labels": [s['date'] for s in stats], "data": [s['count'] for s in stats]})
-@routes.get("/api/stats/top_users", name="api_top_users")
-async def top_users_api(request):
-    if not is_admin_logged_in(request): raise web.HTTPForbidden()
-    stats = await get_top_traffic_users(limit=7)
-    return web.json_response({"labels": [u.get('first_name') or f"ID:{u['id']}" for u in stats], "data": [round(u['total_size'] / 1024, 2) for u in stats]})
+    context = await get_panel_context(request)
+    return web.json_response({"labels": [s['date'] for s in stats], "data": [s['count'] for s in stats], "label_text": context['lang'].get("new_uploads_chart_label", "New Uploads")})
+
 @routes.get("/api/stats/file_types", name="api_file_types")
 async def file_types_api(request):
     if not is_admin_logged_in(request): raise web.HTTPForbidden()
     stats = await get_file_type_stats()
-    return web.json_response({"labels": [s['file_type'] for s in stats], "data": [s['count'] for s in stats]})
+    context = await get_panel_context(request)
+    return web.json_response({"labels": [s['file_type'] for s in stats], "data": [s['count'] for s in stats], "label_text": context['lang'].get("file_types_chart_label", "File Types")})
+
 @routes.get("/api/stats/daily_joins", name="api_daily_joins")
 async def daily_joins_api(request):
     if not is_admin_logged_in(request): raise web.HTTPForbidden()

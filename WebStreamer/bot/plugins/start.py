@@ -5,17 +5,27 @@ from WebStreamer.vars import Var
 from WebStreamer.bot import StreamBot
 from WebStreamer.bot.database import add_or_update_user, is_user_authorized, set_user_lang, is_user_banned
 from WebStreamer.bot.i18n import get_i18n_texts
+from WebStreamer.bot.utils import check_user_is_member
 
 @StreamBot.on_message(filters.command(["start", "help"]) & filters.private)
 async def start(bot: Client, m: Message):
     lang_texts = await get_i18n_texts(m.from_user.id)
     user_id = m.from_user.id
 
-    # 🛑 بررسی مسدود بودن کاربر
+    # 🛑 Force Subscribe Check
+    is_member, error_type, channel_link = await check_user_is_member(user_id)
+    if not is_member:
+        if error_type == "bot_not_admin":
+             await m.reply(lang_texts.get("FORCE_SUB_BOT_NOT_ADMIN"))
+             return # Or continue without check, depends on policy
+        
+        join_button = InlineKeyboardButton(lang_texts.get("JOIN_CHANNEL_BUTTON"), url=channel_link)
+        await m.reply(lang_texts.get("FORCE_SUB_MESSAGE"), reply_markup=InlineKeyboardMarkup([[join_button]]), quote=True)
+        return
+
     if await is_user_banned(user_id):
         return await m.reply(lang_texts.get("BANNED_USER_ERROR"), quote=True)
 
-    # 🛑 بررسی مجاز بودن کاربر
     if not await is_user_authorized(user_id):
         return await m.reply(lang_texts.get("NOT_AUTHORIZED"), quote=True)
 
