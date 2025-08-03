@@ -12,12 +12,11 @@ async def start(bot: Client, m: Message):
     lang_texts = await get_i18n_texts(m.from_user.id)
     user_id = m.from_user.id
 
-    # 🛑 Force Subscribe Check
     is_member, error_type, channel_link = await check_user_is_member(user_id)
     if not is_member:
         if error_type == "bot_not_admin":
              await m.reply(lang_texts.get("FORCE_SUB_BOT_NOT_ADMIN"))
-             return # Or continue without check, depends on policy
+             return 
         
         join_button = InlineKeyboardButton(lang_texts.get("JOIN_CHANNEL_BUTTON"), url=channel_link)
         await m.reply(lang_texts.get("FORCE_SUB_MESSAGE"), reply_markup=InlineKeyboardMarkup([[join_button]]), quote=True)
@@ -83,5 +82,5 @@ async def language_setter(bot: Client, query: CallbackQuery):
 
     try:
         await query.message.edit_text(start_text, reply_markup=reply_markup, disable_web_page_preview=True)
-    except: # MessageNotModified
+    except:
         pass

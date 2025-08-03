@@ -72,13 +72,11 @@ async def generate_single_link(m: Message):
     expiry_hours = None
     custom_caption = m.caption.strip() if m.caption else ''
     
-    # Extract password from anywhere in the caption
     password_match = re.search(r'/p (\S+)', custom_caption)
     if password_match:
         password = password_match.group(1)
         custom_caption = custom_caption.replace(password_match.group(0), '').strip()
 
-    # Extract expiry from anywhere in the caption
     expiry_match = re.search(r'/e (\d+)', custom_caption)
     if expiry_match:
         expiry_hours = int(expiry_match.group(1))
@@ -86,14 +84,10 @@ async def generate_single_link(m: Message):
         
     expiry_date = datetime.datetime.now() + datetime.timedelta(hours=expiry_hours) if expiry_hours else None
     
-    # Use the remaining caption as the custom filename, otherwise use the original filename
     custom_filename_from_caption = custom_caption if custom_caption else None
     
-    # Prioritize the custom filename. If it's empty, fall back to the original.
-    # secure_filename ensures the name is safe.
     final_filename = secure_filename(custom_filename_from_caption) if custom_filename_from_caption else get_name(m)
     
-    # Fallback if the caption only contained commands and is now empty
     if not final_filename:
         final_filename = get_name(m)
 

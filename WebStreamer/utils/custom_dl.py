@@ -158,7 +158,7 @@ class ByteStreamer:
                         )
                     )
                     if isinstance(r, raw.types.upload.File):
-                        retries = 0  # Reset retries on success
+                        retries = 0  
                         chunk = r.bytes
                         if not chunk:
                             logger.warning(f"Got empty chunk on part {current_part} for message {file_id.media_id}")

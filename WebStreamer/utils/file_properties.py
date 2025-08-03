@@ -43,9 +43,8 @@ def get_hash(media_msg: Union[str, Message], length: int) -> str:
     long_hash = hashlib.sha256(unique_id.encode("UTF-8")).hexdigest()
     return long_hash[:length]
 
-
 def get_name(media_msg: Union[Message, FileId]) -> str:
-    file_name = "" # FIX: Initialize file_name to an empty string.
+    file_name = ""
     if isinstance(media_msg, Message):
         media = get_media_from_message(media_msg)
         file_name = getattr(media, "file_name", "")

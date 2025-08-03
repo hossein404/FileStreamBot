@@ -13,7 +13,7 @@ from WebStreamer.bot import multi_clients, work_loads
 from WebStreamer.errors import FIleNotFound, InvalidHash
 from WebStreamer import Var, utils, StartTime, __version__, StreamBot
 from WebStreamer.bot.database import get_link_with_owner_info, increment_link_views
-import aiohttp_jinja2 # For password page
+import aiohttp_jinja2
 
 logger = logging.getLogger("routes")
 routes = web.RouteTableDef()
@@ -63,13 +63,11 @@ async def stream_handler(request: web.Request):
                 password_from_user = data.get("password")
             
             if password_from_user != link_info['password']:
-                # Show password prompt page
                 context = {"request": request, "message_id": message_id, "file_name": custom_filename}
-                if password_from_user is not None: # if password was submitted but incorrect
+                if password_from_user is not None: 
                     context["error"] = "Incorrect password"
                 return await aiohttp_jinja2.render_template_async('password.html', request, context)
 
-        # Increment view count in the background
         asyncio.create_task(increment_link_views(message_id))
 
         return await media_streamer(request, message_id, secure_hash, custom_filename)

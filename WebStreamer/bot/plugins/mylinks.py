@@ -37,7 +37,6 @@ async def mylinks_handler(bot, m: Message):
     user_id = m.from_user.id
     lang_texts = await get_i18n_texts(user_id)
     
-    # 🛑 بررسی مسدود بودن کاربر
     if await is_user_banned(user_id):
         await m.reply_text(lang_texts.get("BANNED_USER_ERROR"), quote=True)
         return
@@ -58,7 +57,6 @@ async def links_callback_handler(bot, query: CallbackQuery):
     data = query.data.split("_")
     action = data[0]
 
-    # 🛑 بررسی مسدود بودن کاربر برای عملیات داخل دکمه‌ها
     if await is_user_banned(user_id):
         await query.answer(lang_texts.get("BANNED_USER_ERROR"), show_alert=True)
         return

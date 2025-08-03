@@ -1,7 +1,7 @@
-# WebStreamer/server/security.py
 import bcrypt
 import secrets
 from aiohttp import web
+from aiohttp_session import Session
 
 CSRF_SESSION_KEY = "csrf_token"
 
@@ -10,7 +10,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     if not plain_password or not hashed_password:
         return False
     try:
-        # Ensure hashed_password is bytes
         if isinstance(hashed_password, str):
             hashed_password = hashed_password.encode('utf-8')
         
@@ -18,27 +17,20 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     except (ValueError, TypeError):
         return False
 
-async def generate_csrf_token(request: web.Request, new_token: bool = False) -> str:
+def generate_csrf_token(session: Session, new_token: bool = False) -> None:
     """
-    Generates and stores a CSRF token in the application context.
-    NOTE: Using app context as a session store is not suitable for multi-process or
-    production environments. Consider aiohttp_session with a proper storage.
+    Ensures a CSRF token exists in the session.
+    Generates one if it's missing or if `new_token` is True.
     """
-    if 'session' not in request.app:
-        request.app['session'] = {}
+    if new_token or CSRF_SESSION_KEY not in session:
+        session[CSRF_SESSION_KEY] = secrets.token_hex(32)
 
-    if new_token or CSRF_SESSION_KEY not in request.app['session']:
-        csrf_token = secrets.token_hex(32)
-        request.app['session'][CSRF_SESSION_KEY] = csrf_token
+def validate_csrf_token(session: Session, received_token: str):
+    """
+    Validates the received CSRF token against the one stored in the session.
+    Raises an HTTPForbidden error if validation fails.
+    """
+    expected_token = session.get(CSRF_SESSION_KEY)
     
-    return request.app['session'][CSRF_SESSION_KEY]
-
-async def validate_csrf_token(request: web.Request, received_token: str):
-    """Validates the received CSRF token against the one in the session."""
-    if 'session' not in request.app or CSRF_SESSION_KEY not in request.app['session']:
-        raise web.HTTPForbidden(text="CSRF validation failed: No token in session.")
-        
-    expected_token = request.app['session'].get(CSRF_SESSION_KEY)
-    
-    if not received_token or not secrets.compare_digest(expected_token, received_token):
-        raise web.HTTPForbidden(text="CSRF validation failed: Token mismatch.")
+    if not expected_token or not received_token or not secrets.compare_digest(expected_token, received_token):
+        raise web.HTTPForbidden(text="CSRF validation failed: Token mismatch. Please try again.")

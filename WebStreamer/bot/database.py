@@ -13,7 +13,6 @@ async def init_db():
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
         await db.execute("PRAGMA journal_mode=WAL")
 
-        # Users Table
         await db.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
@@ -26,7 +25,6 @@ async def init_db():
             )
         ''')
 
-        # Links Table (with new columns)
         cursor = await db.execute("PRAGMA table_info(links)")
         columns = {row[1] for row in await cursor.fetchall()}
         if 'views' not in columns:
@@ -53,7 +51,6 @@ async def init_db():
             )
         ''')
 
-        # Settings & Login Attempts Tables
         await db.execute('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)')
         await db.execute('''
             CREATE TABLE IF NOT EXISTS login_attempts (
@@ -103,7 +100,6 @@ async def get_link_with_owner_info(link_id: int) -> dict:
         row = await cursor.fetchone()
         return dict(row) if row else None
 
-# ... (other functions remain mostly the same, only adding new ones)
 async def set_user_lang(user_id: int, lang_code: str):
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
         async with lock:
@@ -153,8 +149,6 @@ async def get_daily_join_stats():
         db.row_factory = aiosqlite.Row
         return [dict(row) for row in await (await db.execute("SELECT DATE(join_date) as date, COUNT(id) as count FROM users WHERE join_date >= DATE('now', '-7 days') GROUP BY DATE(join_date) ORDER BY date ASC")).fetchall()]
 
-# --- New/Modified Functions for Added Features ---
-
 async def update_stats(user_id: int, file_size_mb: float):
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db: await db.execute("UPDATE users SET total_files = total_files + 1, total_size = total_size + ? WHERE id = ?", (file_size_mb, user_id)); await db.commit()
 async def get_user_links(user_id: int, offset: int, limit: int, query: str = None) -> list:
@@ -172,7 +166,6 @@ async def get_user_links(user_id: int, offset: int, limit: int, query: str = Non
 async def increment_link_views(link_id: int):
     async with aiosqlite.connect(DB_PATH) as db: await db.execute("UPDATE links SET views = views + 1 WHERE id = ?", (link_id,)); await db.commit()
 
-# --- Functions for Admin Panel ---
 async def get_db_settings() -> dict:
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
         db.row_factory = aiosqlite.Row

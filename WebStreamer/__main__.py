@@ -13,35 +13,28 @@ from WebStreamer.bot.clients import initialize_clients
 from WebStreamer.bot.database import init_db
 from WebStreamer.bot.config import config
 
-# --- Robust, Explicit Logging Configuration ---
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_FILE_PATH = os.path.join(os.path.dirname(ROOT_DIR), "streambot.log")
 
-# 1. Get the root logger
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
-# 2. Create formatter
 formatter = logging.Formatter(
     "[%(asctime)s][%(name)s][%(levelname)s] ==> %(message)s",
     datefmt="%d/%m/%Y %H:%M:%S"
 )
 
-# 3. Create a handler for the console (StreamHandler)
 stream_handler = logging.StreamHandler(stream=sys.stdout)
 stream_handler.setFormatter(formatter)
 log.addHandler(stream_handler)
 
-# 4. Create a handler for the file (FileHandler)
 try:
     file_handler = logging.FileHandler(LOG_FILE_PATH, mode="a", encoding="utf-8")
     file_handler.setFormatter(formatter)
     log.addHandler(file_handler)
 except PermissionError:
     log.warning(f"Permission denied to write to log file: {LOG_FILE_PATH}")
-# -----------------------------------------------
 
-# Silence noisy loggers
 logging.getLogger("aiohttp").setLevel(logging.ERROR)
 logging.getLogger("pyrogram").setLevel(logging.INFO)
 logging.getLogger("aiohttp.web").setLevel(logging.ERROR)

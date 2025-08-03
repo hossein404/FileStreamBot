@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const defaultBorderColor = 'rgb(79, 70, 229)';
     const defaultBackgroundColor = 'rgba(79, 70, 229, 0.1)';
 
-    // Daily Joins Chart
     fetch("{{ request.app.router['api_daily_joins'].url_for() }}?token={{ token }}")
         .then(response => response.json())
         .then(data => {
@@ -70,7 +69,6 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => console.error('Error fetching daily joins data:', error));
     
-    // Daily Uploads Chart
     fetch("{{ request.app.router['api_daily_uploads'].url_for() }}?token={{ token }}")
         .then(response => response.json())
         .then(data => {
@@ -92,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => console.error('Error fetching daily uploads data:', error));
 
-    // File Types Chart
     fetch("{{ request.app.router['api_file_types'].url_for() }}?token={{ token }}")
         .then(response => response.json())
         .then(data => {

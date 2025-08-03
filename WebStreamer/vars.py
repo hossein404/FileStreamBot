@@ -7,13 +7,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Logging is now handled exclusively in __main__.py to prevent duplicate logs.
-
 class Var(object):
     mandatory_vars = ['API_ID', 'API_HASH', 'BOT_TOKEN', 'OWNER_ID', 'BIN_CHANNEL']
     missing_vars = [v for v in mandatory_vars if not getenv(v)]
     if missing_vars:
-        # Use print here because logging might not be configured yet
         print(f"FATAL: Missing mandatory environment variables: {missing_vars}")
         sys.exit(1)
 
@@ -41,7 +38,6 @@ class Var(object):
     URL = f"https://{FQDN}/" if HAS_SSL else f"http://{FQDN}:{PORT}/"
     
     DEBUG = getenv('DEBUG', 'false').lower() == 'true'
-    # These variables were missing in the previous version I provided
     RATE_LIMIT = getenv('RATE_LIMIT', 'false').lower() == 'true'
     MAX_REQUESTS = int(getenv('MAX_REQUESTS', '5'))
     TIME_WINDOW = int(getenv('TIME_WINDOW', '60'))

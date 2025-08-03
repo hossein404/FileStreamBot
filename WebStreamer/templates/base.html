@@ -21,7 +21,6 @@
 </head>
 <body class="bg-gray-100">
     <div class="relative min-h-screen md:flex">
-        <!-- Sidebar -->
         <div class="bg-gray-800 text-gray-300 w-64 space-y-6 py-7 px-2 absolute inset-y-0 {{ 'right-0' if current_lang == 'fa' else 'left-0' }} transform {{ '-translate-x-full' if current_lang == 'ltr' else 'translate-x-full' }} md:relative md:translate-x-0 transition duration-200 ease-in-out z-20 flex flex-col" id="sidebar">
             <div class="px-4">
                 <h2 class="text-2xl font-extrabold text-white flex items-center">
@@ -40,7 +39,7 @@
                     (request.app.router['admin_login_logs'], '/admin/security/login_logs', lang.login_logs, '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.42-.42.995-.659 1.591-.659h1.875a3 3 0 013 3z"/>')
                 ] %}
                 {% for route, path, name, icon in nav_items %}
-                <a href="{{ route.url_for() }}?token={{ token }}" 
+                <a href="{{ route.url_for() }}" 
                    class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 hover:bg-gray-700 hover:text-white {% if path in current_path %}active-nav{% endif %}">
                     <svg class="w-6 h-6 ml-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         {{ icon|safe }}
@@ -51,6 +50,7 @@
             </nav>
             <div class="px-2 mt-auto">
                  <form action="{{ request.app.router['admin_logout'].url_for() }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <button type="submit" class="w-full flex items-center px-4 py-2.5 rounded-lg text-red-400 hover:bg-red-500 hover:text-white transition-colors duration-200">
                         <svg class="w-6 h-6 ml-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
                         </svg>
@@ -60,7 +60,6 @@
             </div>
         </div>
 
-        <!-- Main content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <header class="bg-white shadow-sm p-4 flex justify-between items-center">
                  <button class="md:hidden text-gray-500 focus:outline-none" id="menu-button">
@@ -68,8 +67,8 @@
                 </button>
                 <div class="text-xl font-semibold text-gray-700">{% block header_title %}{% endblock %}</div>
                 <div class="flex items-center space-x-2">
-                    <a href="{{ request.app.router['set_panel_lang'].url_for(lang_code='fa') }}?return_to={{ request.path_qs }}" class="px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 {{ 'bg-indigo-600 text-white shadow' if current_lang == 'fa' else 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">FA</a>
-                    <a href="{{ request.app.router['set_panel_lang'].url_for(lang_code='en') }}?return_to={{ request.path_qs }}" class="px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 {{ 'bg-indigo-600 text-white shadow' if current_lang == 'en' else 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">EN</a>
+                    <a href="{{ request.app.router['set_panel_lang'].url_for(lang_code='fa') }}?return_to={{ current_path_for_lang_switcher }}" class="px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 {{ 'bg-indigo-600 text-white shadow' if current_lang == 'fa' else 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">FA</a>
+                    <a href="{{ request.app.router['set_panel_lang'].url_for(lang_code='en') }}?return_to={{ current_path_for_lang_switcher }}" class="px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 {{ 'bg-indigo-600 text-white shadow' if current_lang == 'en' else 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">EN</a>
                 </div>
             </header>
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6 md:p-8">

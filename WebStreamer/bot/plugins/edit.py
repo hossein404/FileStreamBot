@@ -11,14 +11,11 @@ from WebStreamer.bot.i18n import get_i18n_texts
 async def edit_link_handler(bot: StreamBot, m: Message):
     lang_texts = await get_i18n_texts(m.from_user.id)
     
-    # بررسی می‌کند که آیا دستور در پاسخ به یک پیام دیگر ارسال شده است یا نه
     if not m.reply_to_message:
         await m.reply_text(lang_texts.get("EDIT_COMMAND_USAGE").format(command="/edit /p <password> /e <hours>"))
         return
 
-    # تلاش برای استخراج ID لینک از پیام ریپلای شده
     link_id = None
-    # 1. از دکمه‌ها
     if m.reply_to_message.reply_markup:
         for row in m.reply_to_message.reply_markup.inline_keyboard:
             for button in row:
@@ -28,7 +25,6 @@ async def edit_link_handler(bot: StreamBot, m: Message):
             if link_id:
                 break
     
-    # 2. اگر در دکمه‌ها نبود، از خود لینک متنی
     if not link_id and m.reply_to_message.entities:
         for entity in m.reply_to_message.entities:
             if entity.type.name == "TEXT_LINK":
@@ -61,14 +57,12 @@ async def edit_link_handler(bot: StreamBot, m: Message):
         
     expiry_date = datetime.datetime.now() + datetime.timedelta(hours=expiry_hours) if expiry_hours else None
 
-    # بروزرسانی دیتابیس
     success = await update_link_details(link_id, user_id, password, expiry_date)
     
     if not success:
         await m.reply_text(lang_texts.get("EDIT_NOT_OWNER"))
         return
 
-    # آماده‌سازی پیام تایید
     changes_list = []
     if password:
         changes_list.append(lang_texts.get("EDIT_PASSWORD_SET").format(password=password))

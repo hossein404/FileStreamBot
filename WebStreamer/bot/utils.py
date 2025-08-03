@@ -4,7 +4,6 @@ from WebStreamer.bot.config import config
 from WebStreamer.bot import StreamBot
 from pyrogram.errors import UserNotParticipant
 
-# Get a logger for this file
 logger = logging.getLogger(__name__)
 
 async def check_user_is_member(user_id: int):

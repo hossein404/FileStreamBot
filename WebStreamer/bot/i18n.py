@@ -404,7 +404,6 @@ async def get_user_lang(user_id: int) -> str:
             return user_lang_cache[user_id]
         
         try:
-            # Using synchronous sqlite3 for simplicity in this context
             con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
             cur = con.cursor()
             cur.execute("SELECT language FROM users WHERE id = ?", (user_id,))
@@ -426,6 +425,5 @@ async def get_i18n_texts(user_id_or_lang_code: str | int) -> dict:
     else:
         lang = await get_user_lang(user_id_or_lang_code)
     
-    # Fallback to English if a key is missing in the selected language
-    # This is a shallow merge, but works for one level of keys
+
     return {**translations['en'], **translations.get(lang, {})}
