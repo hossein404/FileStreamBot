@@ -2,7 +2,7 @@
 from pyrogram import filters, errors
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from WebStreamer.bot import StreamBot
-from WebStreamer.bot.database import get_user_links, count_user_links, delete_link, get_link_by_id
+from WebStreamer.bot.database import get_user_links, count_user_links, delete_link, get_link_by_id, is_user_banned
 from WebStreamer.bot.i18n import get_i18n_texts
 from WebStreamer.utils.file_properties import get_hash
 from WebStreamer.vars import Var
@@ -36,6 +36,12 @@ async def get_links_keyboard(user_id, page, total_links):
 async def mylinks_handler(bot, m: Message):
     user_id = m.from_user.id
     lang_texts = await get_i18n_texts(user_id)
+    
+    # 🛑 بررسی مسدود بودن کاربر
+    if await is_user_banned(user_id):
+        await m.reply_text(lang_texts.get("BANNED_USER_ERROR"), quote=True)
+        return
+
     total_links = await count_user_links(user_id)
 
     if total_links == 0:
@@ -51,6 +57,11 @@ async def links_callback_handler(bot, query: CallbackQuery):
     lang_texts = await get_i18n_texts(user_id)
     data = query.data.split("_")
     action = data[0]
+
+    # 🛑 بررسی مسدود بودن کاربر برای عملیات داخل دکمه‌ها
+    if await is_user_banned(user_id):
+        await query.answer(lang_texts.get("BANNED_USER_ERROR"), show_alert=True)
+        return
 
     if action == "page":
         page = int(data[1])

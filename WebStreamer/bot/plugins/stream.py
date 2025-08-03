@@ -18,6 +18,7 @@ from WebStreamer.bot.config import config
 from WebStreamer.ratelimiter import RateLimiter
 from pyrogram.enums.parse_mode import ParseMode
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from werkzeug.utils import secure_filename #  <-- این ماژول برای امنیت نام فایل اضافه شد
 
 # A logger for this specific file
 logger = logging.getLogger(__name__)
@@ -48,22 +49,41 @@ def create_album_keyboard(links: list, media_group_id: str, lang_texts: dict, pa
 
 async def generate_single_link(m: Message):
     lang_texts = await get_i18n_texts(m.from_user.id)
-    if not await is_user_authorized(m.from_user.id):
-        await m.reply_text(lang_texts.get("NOT_AUTHORIZED"), quote=True); return None, None
+    user_id = m.from_user.id
+
+    # 🛑 بررسی مسدود بودن کاربر (Ban Check)
+    if await is_user_banned(user_id):
+        await m.reply_text(lang_texts.get("BANNED_USER_ERROR"), quote=True)
+        return None, None
+
+    # 🛑 بررسی مجاز بودن کاربر
+    if not await is_user_authorized(user_id):
+        await m.reply_text(lang_texts.get("NOT_AUTHORIZED"), quote=True)
+        return None, None
+        
+    media = get_media_from_message(m)
+    file_size_in_mb = media.file_size / (1024 * 1024) if media and media.file_size else 0
+
+    # 🛑 بررسی محدودیت حجم (Traffic Limit Check)
+    traffic_details = await get_user_traffic_details(user_id)
+    used_gb = traffic_details.get('total_size', 0.0) / 1024
+    limit_gb = traffic_details.get('traffic_limit_gb')
+
+    if limit_gb is not None and (used_gb + (file_size_in_mb / 1024)) > limit_gb:
+        await m.reply_text(lang_texts.get("TRAFFIC_LIMIT_EXCEEDED").format(traffic_limit_gb=limit_gb), quote=True)
+        return None, None
+
     original_filename = get_name(m)
     custom_base_name = m.caption.replace("\r", " ").replace("\n", " ").strip() if not m.forward_date and m.caption else None
     final_filename = (secure_filename(custom_base_name) + os.path.splitext(original_filename)[1]) if custom_base_name else original_filename
-    media = get_media_from_message(m)
-    file_size_in_mb = media.file_size / (1024 * 1024) if media and media.file_size else 0
+    
     log_msg = await m.copy(chat_id=Var.BIN_CHANNEL)
     file_unique_id = await parse_file_unique_id(m)
     await add_or_update_user(m.from_user.id, m.from_user.first_name, m.from_user.last_name or '', m.from_user.username or '')
     await update_stats(m.from_user.id, file_size_in_mb)
     await insert_link(m.from_user.id, log_msg.id, final_filename, file_size_in_mb, file_unique_id)
 
-    # --- این خط جدید برای ثبت لاگ است ---
     logger.info(f"Link generated for user {m.from_user.id} (@{m.from_user.username}). File: '{final_filename}', Link ID: {log_msg.id}")
-    # ------------------------------------
 
     return final_filename, log_msg.id
 
@@ -72,6 +92,12 @@ async def generate_single_link(m: Message):
     group=4,
 )
 async def media_receive_handler(bot: StreamBot, m: Message):
+    # 🛑 بررسی سریع مسدود بودن کاربر قبل از هر پردازشی
+    if await is_user_banned(m.from_user.id):
+        lang_texts = await get_i18n_texts(m.from_user.id)
+        await m.reply_text(lang_texts.get("BANNED_USER_ERROR"), quote=True)
+        return
+
     lang_texts = await get_i18n_texts(m.from_user.id)
     if m.media_group_id:
         if m.media_group_id not in media_group_cache:
@@ -79,21 +105,27 @@ async def media_receive_handler(bot: StreamBot, m: Message):
         media_group_cache[m.media_group_id].append(m)
         await sleep(1.5)
         try:
-            if len(await bot.get_media_group(m.chat.id, m.id)) != len(media_group_cache.get(m.media_group_id, [])):
+            # بررسی اینکه آیا تعداد پیام‌های گروه یکی است یا نه
+            media_group = await bot.get_media_group(m.chat.id, m.id)
+            if len(media_group) != len(media_group_cache.get(m.media_group_id, [])):
                 return
-        except Exception: return
+        except Exception: 
+            return
+        
         messages = media_group_cache.pop(m.media_group_id)
         messages.sort(key=lambda x: x.id)
         status_message = await m.reply_text(lang_texts.get("album_processing"), quote=True)
+        
         links = []
         for message in messages:
             final_filename, log_msg_id = await generate_single_link(message)
             if log_msg_id:
                 links.append((final_filename, log_msg_id))
+        
         if links:
-            media_group_id = str(m.media_group_id)
-            album_links_cache[media_group_id] = links
-            keyboard = create_album_keyboard(links, media_group_id, lang_texts, page=0)
+            media_group_id_str = str(m.media_group_id)
+            album_links_cache[media_group_id_str] = links
+            keyboard = create_album_keyboard(links, media_group_id_str, lang_texts, page=0)
             await status_message.edit_text(lang_texts.get("album_success"), reply_markup=keyboard)
         else:
             await status_message.edit_text(lang_texts.get("album_error"))
