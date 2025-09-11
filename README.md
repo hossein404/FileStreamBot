@@ -34,8 +34,8 @@ Follow these steps to deploy the bot:
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/iamast3r/TG-File2Link.git
-    cd TG-File2Link
+    git clone https://github.com/iamast3r/FileStreamBot.git
+    cd FileStreamBot
     ```
 
 2.  **Install Prerequisites (Redis):**
