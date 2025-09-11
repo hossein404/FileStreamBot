@@ -1,6 +1,6 @@
 <div dir="rtl" align="center">
 
-# 🚀 TG-File2Link Streamer
+# 🚀 Telegram File Stream Bot
 
 <p>
 یک ربات تلگرامی قدرتمند و کارآمد که برای فایل‌های شما لینک مستقیم با قابلیت استریم تولید می‌کند. این ربات به همراه یک پنل مدیریت امن و پایدار ارائه می‌شود که با Redis کار می‌کند.
@@ -27,8 +27,8 @@
 
 1.  **کلون کردن پروژه:**
     ```bash
-    git clone https://github.com/iamast3r/TG-File2Link.git
-    cd TG-File2Link
+    git clone https://github.com/iamast3r/FileStreamBot.git
+    cd FileStreamBot
     ```
 
 2.  **نصب پیش‌نیاز (Redis):**
