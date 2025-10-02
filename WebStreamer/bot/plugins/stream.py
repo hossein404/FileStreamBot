@@ -18,7 +18,35 @@ from WebStreamer.bot.i18n import get_i18n_texts
 from WebStreamer.bot.utils import check_user_is_member
 from pyrogram.enums.parse_mode import ParseMode
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from werkzeug.utils import secure_filename
+
+
+def _sanitize_custom_filename(filename: str) -> str:
+    """Return a safe filename while keeping non-ASCII characters and extensions."""
+    if not filename:
+        return ""
+
+    original_base = os.path.basename(filename)
+    original_root, original_ext = os.path.splitext(original_base)
+
+    sanitized = original_base.replace("\x00", "")
+    sanitized = sanitized.replace("\r", " ").replace("\n", " ")
+    sanitized = sanitized.replace("/", " ").replace("\\", " ")
+    sanitized = re.sub(r"[<>:\"|?*]", "", sanitized)
+    sanitized = re.sub(r"\s+", " ", sanitized).strip()
+
+    if sanitized in {"", ".", ".."}:
+        sanitized = re.sub(r"\s+", " ", original_root).strip() or "file"
+
+    sanitized_root, sanitized_ext = os.path.splitext(sanitized)
+    if original_ext and sanitized_ext != original_ext:
+        sanitized = (sanitized_root or sanitized or "file") + original_ext
+
+    if not sanitized:
+        sanitized = "file"
+        if original_ext:
+            sanitized += original_ext
+
+    return sanitized
 
 logger = logging.getLogger(__name__)
 
@@ -82,12 +110,15 @@ async def generate_single_link(m: Message):
         expiry_hours = int(expiry_match.group(1))
         custom_caption = custom_caption.replace(expiry_match.group(0), '').strip()
         
-    expiry_date = datetime.datetime.now() + datetime.timedelta(hours=expiry_hours) if expiry_hours else None
+    if expiry_hours:
+        expiry_date = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=expiry_hours)
+    else:
+        expiry_date = None
     
-    custom_filename_from_caption = custom_caption if custom_caption else None
-    
-    final_filename = secure_filename(custom_filename_from_caption) if custom_filename_from_caption else get_name(m)
-    
+    additional_caption = custom_caption if custom_caption else None
+
+    final_filename = get_name(m)
+
     if not final_filename:
         final_filename = get_name(m)
 
@@ -99,7 +130,7 @@ async def generate_single_link(m: Message):
 
     logger.info(f"Link generated for user {user_id} (@{m.from_user.username}). File: '{final_filename}', Link ID: {log_msg.id}")
 
-    return final_filename, log_msg.id, password, expiry_hours
+    return final_filename, log_msg.id, password, expiry_hours, additional_caption
 
 @StreamBot.on_message(
     filters.private & (filters.document | filters.video | filters.audio | filters.animation | filters.voice | filters.video_note | filters.photo | filters.sticker),
@@ -139,7 +170,7 @@ async def media_receive_handler(bot: StreamBot, m: Message):
         
         links = []
         for message in messages:
-            final_filename, log_msg_id, _, _ = await generate_single_link(message)
+            final_filename, log_msg_id, _, _, _ = await generate_single_link(message)
             if log_msg_id:
                 links.append((final_filename, log_msg_id))
         
@@ -152,7 +183,7 @@ async def media_receive_handler(bot: StreamBot, m: Message):
             await status_message.edit_text(lang_texts.get("album_error"))
         return
 
-    final_filename, log_msg_id, password, expiry_hours = await generate_single_link(m)
+    final_filename, log_msg_id, password, expiry_hours, additional_caption = await generate_single_link(m)
     if log_msg_id:
         link_info = await get_link_by_id(log_msg_id)
         file_hash = get_hash(link_info['file_unique_id'], Var.HASH_LENGTH)
@@ -165,6 +196,8 @@ async def media_receive_handler(bot: StreamBot, m: Message):
             reply_text += "\n" + lang_texts.get("LINK_HAS_PASSWORD").format(password=password)
         if expiry_hours:
             reply_text += "\n" + lang_texts.get("LINK_HAS_EXPIRY").format(hours=expiry_hours)
+        if additional_caption:
+            reply_text += f"\n\n{additional_caption}"
             
         reply_markup = InlineKeyboardMarkup([
             [InlineKeyboardButton(lang_texts.get("OPEN_LINK_BUTTON"), url=stream_link)],

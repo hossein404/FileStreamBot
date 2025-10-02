@@ -55,7 +55,10 @@ async def edit_link_handler(bot: StreamBot, m: Message):
         await m.reply_text(lang_texts.get("EDIT_NO_CHANGES"))
         return
         
-    expiry_date = datetime.datetime.now() + datetime.timedelta(hours=expiry_hours) if expiry_hours else None
+    if expiry_hours:
+        expiry_date = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=expiry_hours)
+    else:
+        expiry_date = None
 
     success = await update_link_details(link_id, user_id, password, expiry_date)
     

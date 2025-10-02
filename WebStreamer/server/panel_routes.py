@@ -28,8 +28,6 @@ routes = web.RouteTableDef()
 logger = logging.getLogger("panel_routes")
 
 
-# --- Middleware & Context ---
-
 @web.middleware
 async def auth_middleware(request: web.Request, handler):
     if request.path.startswith("/admin/") and not request.path.startswith("/admin/login"):
@@ -64,8 +62,6 @@ def parse_buttons(text: str):
     return clean_text, InlineKeyboardMarkup(keyboard) if keyboard else None
 
 
-
-# --- Login, Logout & Language Routes ---
 
 @routes.get("/set_lang/{lang_code}", name="set_panel_lang")
 async def set_lang_handler(request: web.Request):
@@ -126,7 +122,6 @@ async def logout_route(request: web.Request):
     raise web.HTTPFound(request.app.router['admin_login'].url_for())
 
 
-# --- Main Admin Panel Routes ---
 
 @routes.get("/admin/dashboard", name="admin_dashboard")
 @aiohttp_jinja2.template('dashboard.html')
@@ -135,7 +130,6 @@ async def dashboard_route(request: web.Request):
     context["stats"] = await get_db_stats_for_panel()
     return context
 
-# --- User Management Routes ---
 
 @routes.get("/admin/users", name="admin_users")
 @aiohttp_jinja2.template('users.html')
@@ -208,7 +202,6 @@ async def unban_user_route(request: web.Request):
     await unban_user(int(data['user_id']))
     raise web.HTTPFound(request.headers.get('Referer', request.app.router['admin_users'].url_for()))
 
-# --- Broadcast & Settings ---
 
 @routes.get("/admin/broadcast", name="admin_broadcast")
 @aiohttp_jinja2.template('broadcast.html')
@@ -276,7 +269,6 @@ async def settings_post_route(request: web.Request):
             
     raise web.HTTPFound(request.app.router['admin_settings'].url_for().with_query(saved='true'))
 
-# --- Links and Logs ---
 
 @routes.get("/admin/search_links", name="admin_search_links")
 @aiohttp_jinja2.template('search_links.html')
@@ -368,7 +360,6 @@ async def deactivate_user_links_route(request: web.Request):
     await deactivate_user_links(int(request.match_info['user_id']))
     raise web.HTTPFound(f'{request.headers.get("Referer")}?deleted=true')
 
-# --- API Routes for Charts ---
 
 @routes.get("/api/stats/daily_uploads", name="api_daily_uploads")
 async def daily_uploads_api(request: web.Request):

@@ -3,11 +3,20 @@ import logging
 import aiosqlite
 import datetime
 import sqlite3
+from typing import Optional
 from WebStreamer.vars import Var
 from WebStreamer.bot.i18n import user_lang_cache, lock
 
 DB_PATH = 'database.sqlite3'
 DETECT_TYPES = sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
+
+def _ensure_utc(dt: Optional[datetime.datetime]) -> Optional[datetime.datetime]:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=datetime.timezone.utc)
+    return dt.astimezone(datetime.timezone.utc)
+
 
 async def init_db():
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
@@ -77,11 +86,29 @@ async def add_or_update_user(user_id: int, first_name: str, last_name: str, user
         await db.execute("UPDATE users SET first_name=?, last_name=?, username=? WHERE id=?", (first_name, last_name, username, user_id))
         await db.commit()
 
-async def insert_link(user_id: int, link_id: int, file_name: str, file_size_mb: float, file_unique_id: str, password: str = None, expiry_date: datetime = None):
+async def insert_link(
+    user_id: int,
+    link_id: int,
+    file_name: str,
+    file_size_mb: float,
+    file_unique_id: str,
+    password: str = None,
+    expiry_date: datetime = None,
+):
     async with aiosqlite.connect(DB_PATH, detect_types=DETECT_TYPES) as db:
+        expiry_date_utc = _ensure_utc(expiry_date)
         await db.execute(
             "INSERT INTO links (id, user_id, file_name, file_size_mb, file_unique_id, creation_date, password, expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (link_id, user_id, file_name, file_size_mb, file_unique_id, datetime.datetime.now(), password, expiry_date)
+            (
+                link_id,
+                user_id,
+                file_name,
+                file_size_mb,
+                file_unique_id,
+                datetime.datetime.now(datetime.timezone.utc),
+                password,
+                expiry_date_utc,
+            ),
         )
         await db.commit()
 
@@ -91,7 +118,7 @@ async def get_link_with_owner_info(link_id: int) -> dict:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
             """
-            SELECT l.id, l.is_active, l.password, l.expiry_date, u.is_banned
+            SELECT l.id, l.is_active, l.password, l.expiry_date, l.creation_date, u.is_banned
             FROM links l JOIN users u ON l.user_id = u.id
             WHERE l.id = ?
             """,
@@ -254,10 +281,12 @@ async def update_link_details(link_id: int, user_id: int, password: str = None, 
         if await cursor.fetchone() is None:
             return False 
 
+        expiry_date_utc = _ensure_utc(expiry_date) if expiry_date is not None else None
+
         if password is not None and expiry_date is not None:
             await db.execute(
                 "UPDATE links SET password = ?, expiry_date = ? WHERE id = ?",
-                (password, expiry_date, link_id)
+                (password, expiry_date_utc, link_id)
             )
         elif password is not None:
             await db.execute(
@@ -267,7 +296,7 @@ async def update_link_details(link_id: int, user_id: int, password: str = None, 
         elif expiry_date is not None:
             await db.execute(
                 "UPDATE links SET expiry_date = ? WHERE id = ?",
-                (expiry_date, link_id)
+                (expiry_date_utc, link_id)
             )
         else:
             return True
