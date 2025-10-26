@@ -34,7 +34,7 @@ Follow these steps to deploy the bot:
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/iamast3r/FileStreamBot.git
+    git clone https://github.com/hossein404/FileStreamBot.git
     cd FileStreamBot
     ```
 
